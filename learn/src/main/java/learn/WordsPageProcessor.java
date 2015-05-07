@@ -86,7 +86,7 @@ public class WordsPageProcessor implements PageProcessor {
 				"piggie", "fatalism", "Judaism", "divinity",
 				"hypothetically", "madness", "penmanship", "dictatorship",
 				"Helium", "Calcium", "Titanium", "Potassium", "Sodium",
-				"anticlockwise" };
+				"anticlockwise","decimeter" };
 		
 		//***************爬取单词*****************
 		for (String string : words) {
@@ -94,7 +94,7 @@ public class WordsPageProcessor implements PageProcessor {
 			Spider.create(new WordsPageProcessor()).addUrl("http://dict.cn/" + string).run();
 		}
 		System.out.println("待转换单词个数："+words.length);
-//		Spider.create(new WordsPageProcessor()).addUrl("http://dict.cn/" + "bicameral").run();
+//		Spider.create(new WordsPageProcessor()).addUrl("http://dict.cn/" + "decimeter").run();
 		
 		//****************保存******************
 		System.out.println("保存");
@@ -233,8 +233,11 @@ public class WordsPageProcessor implements PageProcessor {
 				//经验证第一次请求MP3时 需要在地址后加入单词 即  变量 mp3Url
 				in=new URL("http://audio.dict.cn/"+mp3Url).openConnection().getInputStream();  //创建连接、输入流
 				//创建文件输出流   重置MP3 文件名称  文件格式为  dict_单词.mp3  
-				
-				f = new FileOutputStream("E:/iknowledgeVoice/"+mp3Name+".mp3");
+				File file = new File("E:/iknowledgeVoice/"+mp3Name+".mp3");
+				if(!file.exists()){
+					file.mkdirs();
+				}
+				f = new FileOutputStream(file);
 				byte [] bb=new byte[1024];  //接收缓存
 				int len;
 				while( (len=in.read(bb))>0){ //接收
