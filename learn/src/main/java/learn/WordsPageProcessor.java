@@ -1,9 +1,12 @@
 package learn;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URL;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -24,52 +27,39 @@ import us.codecraft.webmagic.processor.PageProcessor;
  */
 public class WordsPageProcessor implements PageProcessor {
 
-	private Site site = Site.me().setSleepTime(100).setRetryTimes(3)
+	private Site site = Site.me().setSleepTime(3000).setRetryTimes(100)
 			.setTimeOut(15000);
 
+	
 	static List<Words> dataset = new ArrayList<Words>();
 	public void process(Page page) {
-		//需要替换的字符
-		Map<String, String> changes = new HashMap<String, String>();
-		changes.put("æ", "1");
-		changes.put("ɑː", "2");
-		changes.put("ɔː", "3");
-		changes.put("ə", "4");
-		changes.put("ʃ", "5");
-		changes.put("ŋ", "6");
-		changes.put("θ", "7");
-		changes.put("ʌ", "8");
-		changes.put("ʒ", "9");
-		changes.put("e", "A");// 音标有误 separate excel发音['sAp4`ret] 网站发音['sepərət]
-		// segregate excel发音 ['sAgrI`get] 网站发音['seɡrɪɡeɪt] [ˈsɛɡrɪˌɡet]
-		changes.put("ər", "B");
-		changes.put("ɜː", "C");
+		
 		//根据页面位置获取美式音标
-		String pronunciation = page
-				.getHtml()
-				.xpath("//div[@id='content']/div[@class='main']/div[@class='word']/div[@class='phonetic']/span[1]/bdo/text()")
+		String pronunciation = page.getHtml().xpath("//div[@id='content']/div[@class='main']/div[@class='word']/div[@class='phonetic']/span[1]/bdo/text()")
 				.toString();
-		for (int i = 0; i < pronunciation.length(); i++) {
-			for (String key : changes.keySet()) {
-				char item = pronunciation.charAt(i);
-				if(key.equals(item+"")){
-					String newP = pronunciation.replace(key, changes.get(key));
-					pronunciation = newP;
-				}
-			}
-		}
-		Words word = new Words();
-		word.setWord(page.getUrl().toString().split("/")[3]);
-		word.setMeaning("");
-		word.setRoot("");
-		word.setRootMeaning("");
-		word.setHandoutPage("");
-		word.setPronunciation(pronunciation);
-		word.setMaleVoice("");
-		dataset.add(word);
+		//MP3的URL地址 示例：muTd300h2230716d0f31673e090a17af8de9d91f.mp3?t=telefax
+		String mp3Url = page.getHtml().xpath("//div[@id='content']/div[@class='main']/div[@class='word']/div[@class='phonetic']/span[2]/i[2]/@naudio")
+				.toString();
+		String word = page.getUrl().toString().split("/")[3];
+		//特殊音标替换
+		String newPronunciation = conversionSpecialCharacters(word,pronunciation);
+		//下载MP3
+		String maleVoice = downloadVioce(mp3Url);
+		
+		//将转换完成的单词放到集合中
+		Words wordEntity = new Words();
+		wordEntity.setWord(word);
+		wordEntity.setMeaning("");
+		wordEntity.setRoot("");
+		wordEntity.setRootMeaning("");
+		wordEntity.setHandoutPage("");
+		wordEntity.setPronunciation(newPronunciation);
+		wordEntity.setMaleVoice(maleVoice);
+		dataset.add(wordEntity);
 
-		System.out.println("单词：" + page.getUrl().toString().split("/")[3]
-				+ "发音" + pronunciation);
+		System.out.println("单词：" + word
+				+ "发音" + newPronunciation +"   美音男声："+maleVoice);
+		
 	}
 
 	public Site getSite() {
@@ -78,6 +68,7 @@ public class WordsPageProcessor implements PageProcessor {
 	}
 
 	public static void main(String[] args) {
+		//待爬取单词
 		String[] words = { "asymmetrical", "bicameral", "complacence",
 				"consulting", "deserted", "descending", "Decameron",
 				"Decennial", "ecliptic", "heterosexual", "homologue",
@@ -98,31 +89,67 @@ public class WordsPageProcessor implements PageProcessor {
 				"anticlockwise" };
 		
 		//***************爬取单词*****************
-		/*for (String string : words) {
+		for (String string : words) {
 
 			Spider.create(new WordsPageProcessor()).addUrl("http://dict.cn/" + string).run();
 		}
-		System.out.println("待转换单词个数："+words.length);*/
-		
+		System.out.println("待转换单词个数："+words.length);
+//		Spider.create(new WordsPageProcessor()).addUrl("http://dict.cn/" + "bicameral").run();
 		
 		//****************保存******************
-		/*try {
+		System.out.println("保存");
+		try {
 			saveWords();
 		} catch (SQLException e) {
 			e.printStackTrace();
-		}*/
-	
+		}
+		
+		System.out.println("保存完成");
 		
 		//***************导出********************
-		try {
+		/*try {
 			exportExcel();
 		} catch (SQLException e) {
 			e.printStackTrace();
-		}
+		}*/
         //*************************************  
     }
 	/**
-	 * 保存单词到数据库
+	 * 转换特殊字符
+	 * @param word 单词 
+	 * @param pronunciation 发音
+	 */
+	public String  conversionSpecialCharacters(String words,String pronunciation){
+		//需要替换的字符
+				Map<String, String> changes = new HashMap<String, String>();
+				changes.put("æ", "1");
+				changes.put("ɑː", "2");
+				changes.put("ɔː", "3");
+				changes.put("ə", "4");
+				changes.put("ʃ", "5");
+				changes.put("ŋ", "6");
+				changes.put("θ", "7");
+				changes.put("ʌ", "8");
+				changes.put("ʒ", "9");
+				changes.put("e", "A");// 音标有误 separate excel发音['sAp4`ret] 网站发音['sepərət]
+				// segregate excel发音 ['sAgrI`get] 网站发音['seɡrɪɡeɪt] [ˈsɛɡrɪˌɡet]
+				changes.put("ər", "B");
+				changes.put("ɜː", "C");
+				
+				//转换特殊字符
+				for (int i = 0; i < pronunciation.length(); i++) {
+					for (String key : changes.keySet()) {
+						char item = pronunciation.charAt(i);
+						if(key.equals(item+"")){
+							String newP = pronunciation.replace(key, changes.get(key));
+							pronunciation = newP;
+						}
+					}
+				}
+		return pronunciation;
+	}
+	/**
+	 * 保存单词到数据库补全缺失的音标
 	 * @throws SQLException
 	 */
 	public static void saveWords() throws SQLException{
@@ -130,7 +157,8 @@ public class WordsPageProcessor implements PageProcessor {
 		Connection onnection = MysqlDemo.getMysqlDemo().getConnection();
 		try {
 			for (Words word : dataset) {
-				sql="update words set PRONUNCATION = '"+word.getPronunciation().replace("'", "‘")+"' where (WORD = '"+word.getWord()+"' and PRONUNCATION ='')";
+				//由于 音标中的  ' 符号在 数据库操作时会产生错误，所以将其替换成 ’ 后续导出时 再 替换回来
+				sql="update words set PRONUNCATION = '"+word.getPronunciation().replace("'", "‘")+"' , MALE_VOIVE = '"+word.getMaleVoice()+"' where (WORD = '"+word.getWord()+"' and PRONUNCATION ='')";
 				System.out.println(sql);
 				java.sql.Statement statement = onnection.createStatement();
 				statement.executeUpdate(sql);
@@ -189,6 +217,48 @@ public class WordsPageProcessor implements PageProcessor {
         } catch (IOException e) {
             e.printStackTrace();
         }
+	}
+	/**
+	 * 下载并保存MP3文件
+	 * @param mp3Url
+	 */
+	public String  downloadVioce(String mp3Url){
+		//截取纯MP3路径
+				String[] mp3U = mp3Url.split("\\?");
+				String mp3Name = "dict_"+mp3U[1].split("=")[1];
+
+				InputStream in = null;
+				FileOutputStream f = null;
+				try {
+				//经验证第一次请求MP3时 需要在地址后加入单词 即  变量 mp3Url
+				in=new URL("http://audio.dict.cn/"+mp3Url).openConnection().getInputStream();  //创建连接、输入流
+				//创建文件输出流   重置MP3 文件名称  文件格式为  dict_单词.mp3  
+				
+				f = new FileOutputStream("E:/iknowledgeVoice/"+mp3Name+".mp3");
+				byte [] bb=new byte[1024];  //接收缓存
+				int len;
+				while( (len=in.read(bb))>0){ //接收
+				  f.write(bb, 0, len);  //写入文件
+				}
+				f.close();
+				in.close();
+				
+				} catch (Exception e) {
+					System.out.println(mp3Url);
+					e.printStackTrace();
+				}finally {
+					try {
+						if (f != null) {
+							f.close();
+						}
+						if(in !=null){
+							in.close();
+						}
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+				return mp3Name;
 	}
 	
 }
