@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -27,7 +28,7 @@ import us.codecraft.webmagic.processor.PageProcessor;
  */
 public class WordsPageProcessor implements PageProcessor {
 
-	private Site site = Site.me().setSleepTime(3000).setRetryTimes(100)
+	private Site site = Site.me().setSleepTime(100).setRetryTimes(100)
 			.setTimeOut(15000);
 
 	
@@ -38,27 +39,34 @@ public class WordsPageProcessor implements PageProcessor {
 		String pronunciation = page.getHtml().xpath("//div[@id='content']/div[@class='main']/div[@class='word']/div[@class='phonetic']/span[1]/bdo/text()")
 				.toString();
 		//MP3的URL地址 示例：muTd300h2230716d0f31673e090a17af8de9d91f.mp3?t=telefax
-		String mp3Url = page.getHtml().xpath("//div[@id='content']/div[@class='main']/div[@class='word']/div[@class='phonetic']/span[2]/i[2]/@naudio")
-				.toString();
+		/*String mp3Url = page.getHtml().xpath("//div[@id='content']/div[@class='main']/div[@class='word']/div[@class='phonetic']/span[2]/i[2]/@naudio")
+				.toString();*/
 		String word = page.getUrl().toString().split("/")[3];
 		//特殊音标替换
-		String newPronunciation = conversionSpecialCharacters(word,pronunciation);
+//		String newPronunciation = conversionSpecialCharacters(word,pronunciation);
+		String newPronunciation = null;
+		/*try {
+			newPronunciation = new String(pronunciation.getBytes("ISO8859-1"), "GBK");
+		} catch (UnsupportedEncodingException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}*/
 		//下载MP3
-		String maleVoice = downloadVioce(mp3Url);
+		//String maleVoice = downloadVioce(mp3Url);
 		
 		//将转换完成的单词放到集合中
 		Words wordEntity = new Words();
-		wordEntity.setWord(word);
+		wordEntity.setWord(word == null?"":word);
 		wordEntity.setMeaning("");
 		wordEntity.setRoot("");
 		wordEntity.setRootMeaning("");
 		wordEntity.setHandoutPage("");
-		wordEntity.setPronunciation(newPronunciation);
-		wordEntity.setMaleVoice(maleVoice);
+		wordEntity.setPronunciation(pronunciation == null?"":pronunciation);
+		wordEntity.setMaleVoice("");
 		dataset.add(wordEntity);
 
 		System.out.println("单词：" + word
-				+ "发音" + newPronunciation +"   美音男声："+maleVoice);
+				+ "发音" + pronunciation );
 		
 	}
 
@@ -87,31 +95,42 @@ public class WordsPageProcessor implements PageProcessor {
 				"hypothetically", "madness", "penmanship", "dictatorship",
 				"Helium", "Calcium", "Titanium", "Potassium", "Sodium",
 				"anticlockwise","decimeter" };
-		
+		/*long startTime = System.currentTimeMillis();
+		List<String> wordL=null;
+		try {
+			wordL = getAllWords();
+		} catch (SQLException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		//***************爬取单词*****************
-		for (String string : words) {
+		int count = wordL.size();
+		int counts = wordL.size();
+		for (String string : wordL) {
 
 			Spider.create(new WordsPageProcessor()).addUrl("http://dict.cn/" + string).run();
+			System.out.println("总数及未转："+--count+"/"+counts);
 		}
-		System.out.println("待转换单词个数："+words.length);
+		//System.out.println("待转换单词个数："+words.length);
+		System.out.println("爬取用时："+(System.currentTimeMillis()-startTime)/1000/60+"分");
 //		Spider.create(new WordsPageProcessor()).addUrl("http://dict.cn/" + "decimeter").run();
-		
+*/		
 		//****************保存******************
-		System.out.println("保存");
+		/*System.out.println("保存");
 		try {
 			saveWords();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		
-		System.out.println("保存完成");
+		System.out.println("共计用时："+(System.currentTimeMillis()-startTime)/1000/60+"分");
+		System.out.println("保存完成");*/
 		
 		//***************导出********************
-		/*try {
+		try {
 			exportExcel();
 		} catch (SQLException e) {
 			e.printStackTrace();
-		}*/
+		}
         //*************************************  
     }
 	/**
@@ -155,15 +174,19 @@ public class WordsPageProcessor implements PageProcessor {
 	public static void saveWords() throws SQLException{
 		String sql ;
 		Connection onnection = MysqlDemo.getMysqlDemo().getConnection();
+		String wordss = null;
 		try {
 			for (Words word : dataset) {
+				wordss = word.getWord();
 				//由于 音标中的  ' 符号在 数据库操作时会产生错误，所以将其替换成 ’ 后续导出时 再 替换回来
-				sql="update words set PRONUNCATION = '"+word.getPronunciation().replace("'", "‘")+"' , MALE_VOIVE = '"+word.getMaleVoice()+"' where (WORD = '"+word.getWord()+"' and PRONUNCATION ='')";
+				//sql="update words set PRONUNCATION = '"+word.getPronunciation().replace("'", "‘")+"' , MALE_VOIVE = '"+word.getMaleVoice()+"' where (WORD = '"+word.getWord()+"' and PRONUNCATION ='')";
+				sql="update words set PRONUNCATION = '"+word.getPronunciation().replace("'", "‘")+"' where WORD = '"+word.getWord()+"'";
 				System.out.println(sql);
 				java.sql.Statement statement = onnection.createStatement();
 				statement.executeUpdate(sql);
 			}
 		} catch (SQLException e) {
+			System.out.println("错误单词："+wordss);
 			e.printStackTrace();
 		}finally {
 			onnection.close();
@@ -233,11 +256,11 @@ public class WordsPageProcessor implements PageProcessor {
 				//经验证第一次请求MP3时 需要在地址后加入单词 即  变量 mp3Url
 				in=new URL("http://audio.dict.cn/"+mp3Url).openConnection().getInputStream();  //创建连接、输入流
 				//创建文件输出流   重置MP3 文件名称  文件格式为  dict_单词.mp3  
-				File file = new File("E:/iknowledgeVoice/"+mp3Name+".mp3");
+				/*File file = new File("E:/iknowledgeVoice/"+mp3Name+".mp3");
 				if(!file.exists()){
-					file.mkdirs();
-				}
-				f = new FileOutputStream(file);
+					file.mkdir();
+				}*/
+				f = new FileOutputStream("E:/iknowledgeVoice/"+mp3Name+".mp3");
 				byte [] bb=new byte[1024];  //接收缓存
 				int len;
 				while( (len=in.read(bb))>0){ //接收
@@ -263,5 +286,30 @@ public class WordsPageProcessor implements PageProcessor {
 				}
 				return mp3Name;
 	}
-	
+	/**
+	 * 获取数据库中所有单词
+	 * @return
+	 * @throws SQLException
+	 */
+	public static List<String> getAllWords() throws SQLException {
+		List<String> wordList = new ArrayList<String>();
+        String sql ;
+		Connection onnection = MysqlDemo.getMysqlDemo().getConnection();
+		ResultSet rs = null;
+		try {
+				sql="select WORD from words where PRONUNCATION = ''";
+				System.out.println(sql);
+				java.sql.Statement statement = onnection.createStatement();
+				rs=statement.executeQuery(sql);
+				while (rs.next()) {
+				    wordList.add(rs.getString("WORD"));
+				}
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}finally {
+			onnection.close();
+		}
+        return wordList;
+	}
 }
