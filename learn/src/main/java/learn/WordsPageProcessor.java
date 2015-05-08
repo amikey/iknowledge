@@ -28,7 +28,7 @@ import us.codecraft.webmagic.processor.PageProcessor;
  */
 public class WordsPageProcessor implements PageProcessor {
 
-	private Site site = Site.me().setSleepTime(100).setRetryTimes(100)
+	private Site site = Site.me().setSleepTime(500).setRetryTimes(100)
 			.setTimeOut(15000);
 
 	
@@ -39,8 +39,8 @@ public class WordsPageProcessor implements PageProcessor {
 		String pronunciation = page.getHtml().xpath("//div[@id='content']/div[@class='main']/div[@class='word']/div[@class='phonetic']/span[1]/bdo/text()")
 				.toString();
 		//MP3的URL地址 示例：muTd300h2230716d0f31673e090a17af8de9d91f.mp3?t=telefax
-		/*String mp3Url = page.getHtml().xpath("//div[@id='content']/div[@class='main']/div[@class='word']/div[@class='phonetic']/span[2]/i[2]/@naudio")
-				.toString();*/
+		String mp3Url = page.getHtml().xpath("//div[@id='content']/div[@class='main']/div[@class='word']/div[@class='phonetic']/span[2]/i[2]/@naudio")
+				.toString();
 		String word = page.getUrl().toString().split("/")[3];
 		//特殊音标替换
 //		String newPronunciation = conversionSpecialCharacters(word,pronunciation);
@@ -52,7 +52,7 @@ public class WordsPageProcessor implements PageProcessor {
 			e1.printStackTrace();
 		}*/
 		//下载MP3
-		//String maleVoice = downloadVioce(mp3Url);
+		String maleVoice = downloadVioce(mp3Url);
 		
 		//将转换完成的单词放到集合中
 		Words wordEntity = new Words();
@@ -62,7 +62,7 @@ public class WordsPageProcessor implements PageProcessor {
 		wordEntity.setRootMeaning("");
 		wordEntity.setHandoutPage("");
 		wordEntity.setPronunciation(pronunciation == null?"":pronunciation);
-		wordEntity.setMaleVoice("");
+		wordEntity.setMaleVoice(maleVoice == null?"":maleVoice);
 		dataset.add(wordEntity);
 
 		System.out.println("单词：" + word
@@ -77,7 +77,7 @@ public class WordsPageProcessor implements PageProcessor {
 
 	public static void main(String[] args) {
 		//待爬取单词
-		String[] words = { "asymmetrical", "bicameral", "complacence",
+		/*String[] words = { "asymmetrical", "bicameral", "complacence",
 				"consulting", "deserted", "descending", "Decameron",
 				"Decennial", "ecliptic", "heterosexual", "homologue",
 				"hypotension", "metastasis", "monotheism", "polynomial",
@@ -94,8 +94,8 @@ public class WordsPageProcessor implements PageProcessor {
 				"piggie", "fatalism", "Judaism", "divinity",
 				"hypothetically", "madness", "penmanship", "dictatorship",
 				"Helium", "Calcium", "Titanium", "Potassium", "Sodium",
-				"anticlockwise","decimeter" };
-		/*long startTime = System.currentTimeMillis();
+				"anticlockwise","decimeter" };*/
+		long startTime = System.currentTimeMillis();
 		List<String> wordL=null;
 		try {
 			wordL = getAllWords();
@@ -109,28 +109,30 @@ public class WordsPageProcessor implements PageProcessor {
 		for (String string : wordL) {
 
 			Spider.create(new WordsPageProcessor()).addUrl("http://dict.cn/" + string).run();
-			System.out.println("总数及未转："+--count+"/"+counts);
+			System.out.println("未转/总数："+--count+"/"+counts);
 		}
 		//System.out.println("待转换单词个数："+words.length);
 		System.out.println("爬取用时："+(System.currentTimeMillis()-startTime)/1000/60+"分");
 //		Spider.create(new WordsPageProcessor()).addUrl("http://dict.cn/" + "decimeter").run();
-*/		
+		
 		//****************保存******************
-		/*System.out.println("保存");
+		System.out.println("保存");
 		try {
 			saveWords();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 		System.out.println("共计用时："+(System.currentTimeMillis()-startTime)/1000/60+"分");
-		System.out.println("保存完成");*/
+		System.out.println("保存完成");
 		
 		//***************导出********************
+		System.out.println("导出开始");
 		try {
 			exportExcel();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+	
         //*************************************  
     }
 	/**
@@ -180,7 +182,8 @@ public class WordsPageProcessor implements PageProcessor {
 				wordss = word.getWord();
 				//由于 音标中的  ' 符号在 数据库操作时会产生错误，所以将其替换成 ’ 后续导出时 再 替换回来
 				//sql="update words set PRONUNCATION = '"+word.getPronunciation().replace("'", "‘")+"' , MALE_VOIVE = '"+word.getMaleVoice()+"' where (WORD = '"+word.getWord()+"' and PRONUNCATION ='')";
-				sql="update words set PRONUNCATION = '"+word.getPronunciation().replace("'", "‘")+"' where WORD = '"+word.getWord()+"'";
+				//sql="update words set PRONUNCATION = '"+word.getPronunciation().replace("'", "‘")+"' where WORD = '"+word.getWord()+"'";
+				sql="update words set  PRONUNCATION = '"+word.getPronunciation().replace("'", "‘")+"' , MALE_VOIVE = '"+word.getMaleVoice()+"' where WORD = '"+word.getWord()+"'";
 				System.out.println(sql);
 				java.sql.Statement statement = onnection.createStatement();
 				statement.executeUpdate(sql);
@@ -297,7 +300,7 @@ public class WordsPageProcessor implements PageProcessor {
 		Connection onnection = MysqlDemo.getMysqlDemo().getConnection();
 		ResultSet rs = null;
 		try {
-				sql="select WORD from words where PRONUNCATION = ''";
+				sql="select WORD from words WHERE PRONUNCATION='' ";
 				System.out.println(sql);
 				java.sql.Statement statement = onnection.createStatement();
 				rs=statement.executeQuery(sql);
