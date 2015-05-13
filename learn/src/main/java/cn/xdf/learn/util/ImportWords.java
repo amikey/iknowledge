@@ -1,52 +1,24 @@
-package learn;
+package cn.xdf.learn.util;
 
+import java.io.File;
+import java.io.IOException;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.UUID;
 
-public class MysqlDemo {
-	private MysqlDemo() {
-	};
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
-	private static MysqlDemo mysqlDemo = null;
+import cn.xdf.learn.entity.Words;
 
-	public static MysqlDemo getMysqlDemo() {
-		if (mysqlDemo == null) {
-			mysqlDemo = new MysqlDemo();
-		}
-		return mysqlDemo;
-	}
+public class ImportWords extends HttpServlet {
 
-	public Connection getConnection() {
-		Connection conn = null;
-		// MySQL的JDBC URL编写方式：jdbc:mysql://主机名称：连接端口/数据库的名称?参数=值
-		// 避免中文乱码要指定useUnicode和characterEncoding
-		// 执行数据库操作之前要在数据库管理系统上创建一个数据库，名字自己定，
-		// 下面语句之前就要先创建javademo数据库
-		String url = "jdbc:mysql://localhost:3306/xdflearn?"
-				+ "user=root&password=root&useUnicode=true&characterEncoding=UTF8";
-		// 之所以要使用下面这条语句，是因为要使用MySQL的驱动，所以我们要把它驱动起来，
-		// 可以通过Class.forName把它加载进去，也可以通过初始化来驱动起来，下面三种形式都可以
-		try {
-			Class.forName("com.mysql.jdbc.Driver");
-			// 动态加载mysql驱动
-			// 一个Connection代表一个数据库连接
-			conn = DriverManager.getConnection(url);
-			// Statement里面带有很多方法，比如executeUpdate可以实现插入，更新和删除等
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return conn;
-
-	}
-
-	public static void main(String[] args) throws Exception {
-		
-		StringBuffer sql = new StringBuffer();
-
-		Connection connection =MysqlDemo.getMysqlDemo().getConnection();
+	public void doPost(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
+		Connection connection = JDBCConnection.getJDBCConnection()
+				.getConnection();
 		try {
 
 			// or:
@@ -55,13 +27,15 @@ public class MysqlDemo {
 			// new com.mysql.jdbc.Driver();
 			System.out.println("成功加载MySQL驱动程序");
 
+			// String path = request.getRealPath("/upload");
 			int result = 0;
 			// result = stmt.executeUpdate(sql);//
 			// executeUpdate语句会返回一个受影响的行数，如果返回-1就没有成功
 			if (result != -1) {
 				// System.out.println("创建数据表成功");
 				ReadExcel read = new ReadExcel();
-				List<Words> word = read.readXls();
+				// List<Words> word = read.readXls(getFile(path));
+				List<Words> word = read.readXls("E:\\iknowledge\\新单词.xlsx");
 				int index = 0;
 				StringBuffer erro = new StringBuffer();
 				System.out.println(word.get(1).getWord());
@@ -74,16 +48,24 @@ public class MysqlDemo {
 					 * words.getPronunciation().replace("'", "‘") + "','" +
 					 * words.getMaleVoice() + "');");
 					 */
-					String ss = "insert into words(WORD,MEANING,ROOT,ROOT_MEANING,HANDOUT_PAGE,PRONUNCATION,MALE_VOIVE) values('" + words.getWord()
-							+ "','" + words.getMeaning() + "','"
-							+ words.getRoot() + "','" + words.getRootMeaning()
-							+ "','" + words.getHandoutPage() + "','"
+					String ss = "insert into words(WORD,MEANING,ROOT,ROOT_MEANING,HANDOUT_PAGE,PRONUNCATION,MALE_VOIVE) values('"
+							+ words.getWord()
+							+ "','"
+							+ words.getMeaning()
+							+ "','"
+							+ words.getRoot()
+							+ "','"
+							+ words.getRootMeaning()
+							+ "','"
+							+ words.getHandoutPage()
+							+ "','"
 							+ words.getPronunciation().replace("'", "‘")
 							// + "','" + words.getPronunciation()
 							+ "','" + words.getMaleVoice() + "');";
 					System.out.println(ss);
 					try {
-						result = connection.createStatement().executeUpdate(ss.toString());
+						result = connection.createStatement().executeUpdate(
+								ss.toString());
 					} catch (com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException e) {
 						index++;
 						erro.append(words.getWord() + " \r\n  ");
@@ -105,9 +87,32 @@ public class MysqlDemo {
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
-			connection.close();
+			try {
+				connection.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
-
 	}
 
+	public String getFile(String srcPath) {
+		File dir = new File(srcPath);
+		File[] files = dir.listFiles();
+
+		String filePath = files[0].getAbsolutePath();
+		return filePath;
+	}
+
+	public static void main(String[] args) {
+		try {
+			new ImportWords().doPost(null, null);
+		} catch (ServletException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 }

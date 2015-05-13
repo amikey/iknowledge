@@ -1,4 +1,4 @@
-package learn;
+package cn.xdf.learn.util;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -11,11 +11,13 @@ import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import cn.xdf.learn.entity.Words;
+
 
 public class ReadExcel {
 
-	public List<Words> readXls() throws IOException {
-		InputStream is = new FileInputStream("E:\\iknowledge\\单词导入模版.xlsx");
+	public List<Words> readXls(String filePath) throws IOException {
+		InputStream is = new FileInputStream(filePath);
 		@SuppressWarnings("resource")
 		XSSFWorkbook   hssfWorkbook = new XSSFWorkbook (is);
 		Words Words = null;
@@ -41,8 +43,18 @@ public class ReadExcel {
 					XSSFCell maleVoice = hssfRow.getCell(6);
 					Words.setWord(getValue(word));
 					Words.setMeaning(getValue(meaning));
-					Words.setRoot(getValue(root));
-					Words.setHandoutPage(getValue(handoutPage));
+					try {
+						
+						Words.setRoot(getValue(root));
+					} catch (Exception e) {
+						Words.setRoot("");
+					}
+					try {
+						
+						Words.setHandoutPage(getValue(handoutPage));
+					} catch (Exception e) {
+						Words.setHandoutPage("");
+					}
 					try {
 						Words.setRootMeaning(getValue(rootMeaning));
 					} catch (Exception e) {

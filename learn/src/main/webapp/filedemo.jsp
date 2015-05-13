@@ -9,7 +9,7 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
   <head>
     <base href="<%=basePath%>">
     
-    <title>My JSP 'fileupload.jsp' starting page</title>
+    <title>My JSP 'filedemo.jsp' starting page</title>
     
 	<meta http-equiv="pragma" content="no-cache">
 	<meta http-equiv="cache-control" content="no-cache">
@@ -20,19 +20,26 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 	<link rel="stylesheet" type="text/css" href="styles.css">
 	-->
 
+<script type="text/javascript">
+function doSubmit(){
+    documnt.form[0].action="import"
+    documnt.form[0].submit;
+}
+</script>
   </head>
   
   <body>
-     <!-- enctype 默认是 application/x-www-form-urlencoded -->
-     <form action="FileUpLoad" enctype="multipart/form-data" method="post" >
-        
-               用户名：<input type="text" name="usename"> <br/>
-               上传文件：<input type="file" name="file1"><br/>
-              上传文件： <input type="file" name="file2"><br/>
-              <input type="submit" value="提交"/>
-     </form>
-     
-     
-     
+    
+    用户名：${requestScope.usename } <br/>
+    文件：${requestScope.file1 }<br/>
+    ${requestScope.file2 }<br/>
+    <form action="importWords" method="post">
+    <input type="button" onclick="doSubmit()" value="导入">
+    </form>
+    <!-- 把上传的图片显示出来 -->
+    <img alt="go" src="upload/<%=(String)request.getAttribute("file1")%> " />
+    
+    
   </body>
+  
 </html>

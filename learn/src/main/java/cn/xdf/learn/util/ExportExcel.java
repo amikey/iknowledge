@@ -1,4 +1,4 @@
-package learn;
+package cn.xdf.learn.util;
 
 import java.io.IOException;
 import java.io.OutputStream;

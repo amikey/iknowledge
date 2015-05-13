@@ -1,7 +1,8 @@
-package learn;
+package cn.xdf.learn.entity;
 
 public class Words {
 
+	private Integer id;
 	private String word; 		//单词
 	private String meaning;		//词性和词义
 	private String root;		//词根
@@ -11,9 +12,10 @@ public class Words {
 	private String maleVoice;	//美音男声
 	
 	
-	public Words(String word, String meaning, String root, String rootMeaning,
+	public Words(Integer id,String word, String meaning, String root, String rootMeaning,
 			String handoutPage, String pronunciation, String maleVoice) {
 		super();
+		this.id = id;
 		this.word = word;
 		this.meaning = meaning;
 		this.root = root;
@@ -22,6 +24,15 @@ public class Words {
 		this.pronunciation = pronunciation;
 		this.maleVoice = maleVoice;
 	}
+	
+	public Integer getId() {
+		return id;
+	}
+
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
 	public Words() {
 	}
 	public String getWord() {

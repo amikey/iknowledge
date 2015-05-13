@@ -1,12 +1,10 @@
-package learn;
+package cn.xdf.learn;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -22,6 +20,9 @@ import us.codecraft.webmagic.Page;
 import us.codecraft.webmagic.Site;
 import us.codecraft.webmagic.Spider;
 import us.codecraft.webmagic.processor.PageProcessor;
+import cn.xdf.learn.entity.Words;
+import cn.xdf.learn.util.ExportExcel;
+import cn.xdf.learn.util.JDBCConnection;
 
 /**
  * @author sunxingyang<br>
@@ -76,31 +77,11 @@ public class WordsPageProcessor implements PageProcessor {
 	}
 
 	public static void main(String[] args) {
-		//待爬取单词
-		/*String[] words = { "asymmetrical", "bicameral", "complacence",
-				"consulting", "deserted", "descending", "Decameron",
-				"Decennial", "ecliptic", "heterosexual", "homologue",
-				"hypotension", "metastasis", "monotheism", "polynomial",
-				"primacy", "rebirth", "Renaissance", "telecom", "telefax",
-				"aerodynamics", "inauguration", "accede", "centipede",
-				"chronology", "scissors", "accredit", "crucifixion",
-				"cruciform", "chromatography", "fluorochrome", "dentistry",
-				"seduction", "abduction", "adduction", "esse", "refrigerant",
-				"geocentric", "geomagnetic", "geopolitics", "hemostasis",
-				"inherited", "adjoining", "adjunction", "astronautics",
-				"Neolithic", "pharmaceutics", "exponential", "prescriptive",
-				"asperse", "alienable", "non-linear", "poetess", "rhetorics",
-				"poetics", "roomie", "birdie", "doggie",
-				"piggie", "fatalism", "Judaism", "divinity",
-				"hypothetically", "madness", "penmanship", "dictatorship",
-				"Helium", "Calcium", "Titanium", "Potassium", "Sodium",
-				"anticlockwise","decimeter" };*/
 		long startTime = System.currentTimeMillis();
 		List<String> wordL=null;
 		try {
 			wordL = getAllWords();
 		} catch (SQLException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 		//***************爬取单词*****************
@@ -113,7 +94,6 @@ public class WordsPageProcessor implements PageProcessor {
 		}
 		//System.out.println("待转换单词个数："+words.length);
 		System.out.println("爬取用时："+(System.currentTimeMillis()-startTime)/1000/60+"分");
-//		Spider.create(new WordsPageProcessor()).addUrl("http://dict.cn/" + "decimeter").run();
 		
 		//****************保存******************
 		System.out.println("保存");
@@ -135,47 +115,14 @@ public class WordsPageProcessor implements PageProcessor {
 	
         //*************************************  
     }
-	/**
-	 * 转换特殊字符
-	 * @param word 单词 
-	 * @param pronunciation 发音
-	 */
-	public String  conversionSpecialCharacters(String words,String pronunciation){
-		//需要替换的字符
-				Map<String, String> changes = new HashMap<String, String>();
-				changes.put("æ", "1");
-				changes.put("ɑː", "2");
-				changes.put("ɔː", "3");
-				changes.put("ə", "4");
-				changes.put("ʃ", "5");
-				changes.put("ŋ", "6");
-				changes.put("θ", "7");
-				changes.put("ʌ", "8");
-				changes.put("ʒ", "9");
-				changes.put("e", "A");// 音标有误 separate excel发音['sAp4`ret] 网站发音['sepərət]
-				// segregate excel发音 ['sAgrI`get] 网站发音['seɡrɪɡeɪt] [ˈsɛɡrɪˌɡet]
-				changes.put("ər", "B");
-				changes.put("ɜː", "C");
-				
-				//转换特殊字符
-				for (int i = 0; i < pronunciation.length(); i++) {
-					for (String key : changes.keySet()) {
-						char item = pronunciation.charAt(i);
-						if(key.equals(item+"")){
-							String newP = pronunciation.replace(key, changes.get(key));
-							pronunciation = newP;
-						}
-					}
-				}
-		return pronunciation;
-	}
+	
 	/**
 	 * 保存单词到数据库补全缺失的音标
 	 * @throws SQLException
 	 */
 	public static void saveWords() throws SQLException{
 		String sql ;
-		Connection onnection = MysqlDemo.getMysqlDemo().getConnection();
+		Connection onnection = JDBCConnection.getJDBCConnection().getConnection();
 		String wordss = null;
 		try {
 			for (Words word : dataset) {
@@ -205,7 +152,7 @@ public class WordsPageProcessor implements PageProcessor {
         try {
 
         	String sql ;
-    		Connection onnection = MysqlDemo.getMysqlDemo().getConnection();
+    		Connection onnection = JDBCConnection.getJDBCConnection().getConnection();
     		ResultSet rs = null;
     		List<Words> wordList = new ArrayList<Words>();
     		try {
@@ -232,7 +179,7 @@ public class WordsPageProcessor implements PageProcessor {
     			onnection.close();
     		}
         	
-            OutputStream out = new FileOutputStream("E://单词导出.xls");
+            OutputStream out = new FileOutputStream("E://单词导出new.xls");
             ex.exportExcel(headers, wordList, out);
             out.close();
             JOptionPane.showMessageDialog(null, "导出成功!");
@@ -297,7 +244,7 @@ public class WordsPageProcessor implements PageProcessor {
 	public static List<String> getAllWords() throws SQLException {
 		List<String> wordList = new ArrayList<String>();
         String sql ;
-		Connection onnection = MysqlDemo.getMysqlDemo().getConnection();
+		Connection onnection = JDBCConnection.getJDBCConnection().getConnection();
 		ResultSet rs = null;
 		try {
 				sql="select WORD from words WHERE PRONUNCATION='' ";
@@ -314,5 +261,39 @@ public class WordsPageProcessor implements PageProcessor {
 			onnection.close();
 		}
         return wordList;
+	}
+	/**
+	 * 音标转换特殊字符
+	 * @param word 单词 
+	 * @param pronunciation 发音
+	 */
+	public String  conversionSpecialCharacters(String words,String pronunciation){
+		//需要替换的字符
+				Map<String, String> changes = new HashMap<String, String>();
+				changes.put("æ", "1");
+				changes.put("ɑː", "2");
+				changes.put("ɔː", "3");
+				changes.put("ə", "4");
+				changes.put("ʃ", "5");
+				changes.put("ŋ", "6");
+				changes.put("θ", "7");
+				changes.put("ʌ", "8");
+				changes.put("ʒ", "9");
+				changes.put("e", "A");// 音标有误 separate excel发音['sAp4`ret] 网站发音['sepərət]
+				// segregate excel发音 ['sAgrI`get] 网站发音['seɡrɪɡeɪt] [ˈsɛɡrɪˌɡet]
+				changes.put("ər", "B");
+				changes.put("ɜː", "C");
+				
+				//转换特殊字符
+				for (int i = 0; i < pronunciation.length(); i++) {
+					for (String key : changes.keySet()) {
+						char item = pronunciation.charAt(i);
+						if(key.equals(item+"")){
+							String newP = pronunciation.replace(key, changes.get(key));
+							pronunciation = newP;
+						}
+					}
+				}
+		return pronunciation;
 	}
 }
