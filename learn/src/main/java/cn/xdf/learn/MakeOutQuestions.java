@@ -551,7 +551,12 @@ public class MakeOutQuestions {
 		}
 		return wordList;
 	}
-
+	/**
+	 * 递归生成itemCode
+	 * @param r  已有序号集合
+	 * @param itCode
+	 * @return
+	 */
 	public String getItemCode(List<String> r, String itCode) {
 		String[] code = { "A", "B", "C", "D" };
 		int random = new Random().nextInt(4);
@@ -563,13 +568,22 @@ public class MakeOutQuestions {
 		return itemCode;
 
 	}
-
+	/**
+	 * 获取时间格式
+	 * @param time
+	 * @return
+	 */
 	public static String string2Date(String time) {
 		Date d = new Date(time);
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		time = formatter.format(d);
 		return time;
 	}
+	/**
+	 * 根据itemCode生成答案顺序
+	 * @param itemCode
+	 * @return
+	 */
 	public int getOrderCode(String itemCode){
 		int orderCode = 0;
 		if(itemCode.equals("A")){
