@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2015-5-14 10:00:42 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="cn.learn.mapp.WdWord" table="wd_word" catalog="xdflearn">
+        <id name="id" type="java.lang.Integer">
+            <column name="id" />
+            <generator class="identity" />
+        </id>
+        <property name="word" type="string">
+            <column name="word" length="64" />
+        </property>
+        <property name="phoneticUs" type="string">
+            <column name="phonetic_us" length="64" />
+        </property>
+        <property name="pronunUsMan" type="string">
+            <column name="pronun_us_man">
+                <comment>????????&#161;&#164;??</comment>
+            </column>
+        </property>
+        <property name="serverId" type="java.lang.Integer">
+            <column name="server_id" />
+        </property>
+        <property name="wordRootId" type="java.lang.Integer">
+            <column name="word_root_id" />
+        </property>
+        <property name="bookId" type="java.lang.Integer">
+            <column name="book_id" />
+        </property>
+        <property name="characterId" type="java.lang.Integer">
+            <column name="character_id" />
+        </property>
+        <property name="pageNo" type="java.lang.Integer">
+            <column name="page_no" />
+        </property>
+        <property name="remarks" type="string">
+            <column name="remarks" length="512" />
+        </property>
+        <property name="createBy" type="java.lang.Integer">
+            <column name="create_by" />
+        </property>
+        <property name="createDate" type="timestamp">
+            <column name="create_date" length="19" />
+        </property>
+        <property name="updateBy" type="java.lang.Integer">
+            <column name="update_by" />
+        </property>
+        <property name="updateDate" type="timestamp">
+            <column name="update_date" length="19" />
+        </property>
+        <property name="delFlag" type="java.lang.Integer">
+            <column name="del_flag" />
+        </property>
+    </class>
+</hibernate-mapping>
