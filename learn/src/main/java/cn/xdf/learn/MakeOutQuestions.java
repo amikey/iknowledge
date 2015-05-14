@@ -27,14 +27,16 @@ public class MakeOutQuestions {
 	static int listenToCheckAnIndex = 0;
 	// 听写英问题及答案数
 	static int listenToWriteQuIndex = 0;
-
+	// 问题数
+	static int errCount = 0;
+		
 	public static void main(String[] args) {
 
 		MakeOutQuestions make = new MakeOutQuestions();
 		make.makeCHToEN();
-		make.makeENToCH();
+		/*make.makeENToCH();
 		make.listenToCheck();
-		make.listenToWrite();
+		make.listenToWrite();*/
 		System.out.println("中翻英题目数:" + CHToENQuIndex);
 		System.out.println("中翻英答案数:" + CHToENAnIndex);
 		System.out.println("英翻中题目数:" + ENToCHQuIndex);
@@ -42,6 +44,8 @@ public class MakeOutQuestions {
 		System.out.println("听选英问题数:" + listenToCheckQuIndex);
 		System.out.println("听选英答案数:" + listenToCheckAnIndex);
 		System.out.println("听写英问题及答案数:" + listenToWriteQuIndex);
+		System.out.println("问题数:" + errCount);
+		
 	}
 
 	/**
@@ -95,6 +99,9 @@ public class MakeOutQuestions {
 			// 存放选项
 			List<String> r = new ArrayList<String>();
 			r.add(code[right]);
+			if(word1==null||word1.size()<3){
+				errCount++;
+			}
 			for (Words words3 : word1) {
 				int random = new Random().nextInt(4);
 				String itemCode = code[random];
@@ -427,6 +434,36 @@ public class MakeOutQuestions {
 		}
 	}
 
+	public Integer getFullPage(int page){
+		Connection connection = JDBCConnection.getJDBCConnection()
+				.getConnection();
+		java.sql.Statement statement;
+		ResultSet rs = null;
+		int num = 0;
+		String sql = "SELECT COUNT(w.page_num) num FROM wd_word w WHERE page_num = "+page;
+		try {
+			statement = connection.createStatement();
+			rs = statement.executeQuery(sql);
+			while (rs.next()) {
+				num = rs.getInt("num");
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				connection.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		if(num < 3){
+			page++;
+			getFullPage(num);
+		}
+		return page;
+		
+	}
+	
 	/**
 	 * 根据页码及单词生成选项
 	 * 
@@ -440,7 +477,7 @@ public class MakeOutQuestions {
 				.getConnection();
 		java.sql.Statement statement;
 		ResultSet rs = null;
-
+		page = getFullPage(page);
 		String sql = "SELECT * FROM words where HANDOUT_PAGE = '" + page + "'";
 		if (words.getWord() != null) {
 			sql += "AND WORD != '" + words.getWord() + "' ";
@@ -524,10 +561,9 @@ public class MakeOutQuestions {
 		ResultSet rs = null;
 		try {
 			sql = "SELECT w.id id,w.word WORD,d.word_prop MEANING_A,d.definition MEANING_B,\r\n" + 
-					"r.word ROOT,r.definition ROOT_MEANING,w.page_no HANDOUT_PAGE,\r\n" + 
-					"w.phonetic_us PRONUNCATION,w.pronun_us_man MALE_VOIVE \r\n" + 
-					"FROM wd_word w LEFT JOIN wd_word_def d ON w.id = d.word_id \r\n" + 
-					"LEFT JOIN wd_word_root r ON w.word_root_id = r.id; ";
+					" w.page_num HANDOUT_PAGE,\r\n" + 
+					" w.phonetic_us PRONUNCATION,w.pronun_us_man MALE_VOIVE \r\n" + 
+					" FROM wd_word w LEFT JOIN wd_word_def d ON w.id = d.word_id ";
 			statement = connection.createStatement();
 			rs = statement.executeQuery(sql);
 			while (rs.next()) {
@@ -536,12 +572,20 @@ public class MakeOutQuestions {
 				word.setWord(rs.getString("WORD"));
 				word.setMeaning(rs.getString("MEANING_A")
 						+ rs.getString("MEANING_B"));
-				word.setRoot(rs.getString("ROOT"));
-				word.setRootMeaning(rs.getString("ROOT_MEANING"));
+//				word.setRoot(rs.getString("ROOT"));
+//				word.setRootMeaning(rs.getString("ROOT_MEANING"));
 				word.setHandoutPage(rs.getString("HANDOUT_PAGE"));
-				word.setPronunciation(rs.getString("PRONUNCATION").replace("‘",
-						"'"));
-				word.setMaleVoice(rs.getString("MALE_VOIVE"));
+				try {
+					
+					word.setPronunciation(rs.getString("PRONUNCATION").replace("‘","'"));
+				} catch (Exception e) {
+					word.setPronunciation("");
+				}try {
+					
+					word.setMaleVoice(rs.getString("MALE_VOIVE"));
+				} catch (Exception e) {
+					word.setMaleVoice("");
+				}
 				wordList.add(word);
 			}
 		} catch (SQLException e) {
