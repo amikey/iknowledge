@@ -33,10 +33,10 @@ public class MakeOutQuestions {
 	public static void main(String[] args) {
 
 		MakeOutQuestions make = new MakeOutQuestions();
-		make.makeCHToEN();
-		/*make.makeENToCH();
+//		make.makeCHToEN();
+		make.makeENToCH();
 		make.listenToCheck();
-		make.listenToWrite();*/
+		make.listenToWrite();
 		System.out.println("中翻英题目数:" + CHToENQuIndex);
 		System.out.println("中翻英答案数:" + CHToENAnIndex);
 		System.out.println("英翻中题目数:" + ENToCHQuIndex);
@@ -96,6 +96,8 @@ public class MakeOutQuestions {
 			}
 			List<Words> word1 = getWordGroup(
 					(int) Integer.parseInt(words2.getHandoutPage()), words2);
+			
+			
 			// 存放选项
 			List<String> r = new ArrayList<String>();
 			r.add(code[right]);
@@ -114,6 +116,7 @@ public class MakeOutQuestions {
 					r.add(itemCode);
 				}
 
+				
 				String sql2 = "INSERT INTO wd_timu_item (item_code,item_name,order_num,timu_id,create_time,update_time)values('"
 						+ itemCode
 						+ "','"
@@ -149,7 +152,6 @@ public class MakeOutQuestions {
 					+ "','"
 					+ string2Date(new Date().toString()) + "')";
 			CHToENAnIndex++;
-			System.out.println(sql3);
 			try {
 				statement = connection.createStatement();
 				statement.executeUpdate(sql3);
@@ -228,7 +230,7 @@ public class MakeOutQuestions {
 					itemCode = getItemCode(r, itemCode);
 					r.add(itemCode);
 				}
-
+				
 				String sql2 = "INSERT INTO wd_timu_item (item_code,item_name,order_num,timu_id,create_time,update_time)values('"
 						+ itemCode
 						+ "','"
@@ -342,7 +344,7 @@ public class MakeOutQuestions {
 					itemCode = getItemCode(r, itemCode);
 					r.add(itemCode);
 				}
-
+				
 				String sql2 = "INSERT INTO wd_timu_item (item_code,item_name,order_num,timu_id,create_time,update_time)values('"
 						+ itemCode
 						+ "','"
@@ -477,7 +479,6 @@ public class MakeOutQuestions {
 				.getConnection();
 		java.sql.Statement statement;
 		ResultSet rs = null;
-		page = getFullPage(page);
 		String sql = "SELECT * FROM words where HANDOUT_PAGE = '" + page + "'";
 		if (words.getWord() != null) {
 			sql += "AND WORD != '" + words.getWord() + "' ";
@@ -487,6 +488,7 @@ public class MakeOutQuestions {
 			sql += "AND PRONUNCATION != '" + words.getPronunciation() + "' ";
 		}
 		sql += " ORDER BY rand() LIMIT 3";
+		System.out.println("======="+sql);
 		try {
 			statement = connection.createStatement();
 			rs = statement.executeQuery(sql);
@@ -526,12 +528,12 @@ public class MakeOutQuestions {
 				.getConnection();
 		ResultSet rs = null;
 		try {
-			sql = "select DISTINCT(page_no) from wd_word ";
+			sql = "select DISTINCT(HANDOUT_PAGE) from words ";
 			System.out.println(sql);
 			java.sql.Statement statement = onnection.createStatement();
 			rs = statement.executeQuery(sql);
 			while (rs.next()) {
-				wordList.add(rs.getInt("page_no"));
+				wordList.add(rs.getInt("HANDOUT_PAGE"));
 			}
 
 		} catch (SQLException e) {
@@ -560,20 +562,25 @@ public class MakeOutQuestions {
 		java.sql.Statement statement;
 		ResultSet rs = null;
 		try {
+
 			sql = "SELECT w.id id,w.word WORD,d.word_prop MEANING_A,d.definition MEANING_B,\r\n" + 
+					"r.word ROOT,r.definition ROOT_MEANING,\r\n" + 
 					" w.page_num HANDOUT_PAGE,\r\n" + 
 					" w.phonetic_us PRONUNCATION,w.pronun_us_man MALE_VOIVE \r\n" + 
-					" FROM wd_word w LEFT JOIN wd_word_def d ON w.id = d.word_id ";
+					" FROM wd_word w LEFT JOIN wd_word_def d ON w.id = d.word_id LEFT JOIN  wd_word_root r ON w.word_root_id = r.id";
+
+			System.out.println(sql);
 			statement = connection.createStatement();
 			rs = statement.executeQuery(sql);
 			while (rs.next()) {
 				Words word = new Words();
 				word.setId(rs.getInt("id"));
 				word.setWord(rs.getString("WORD"));
+
 				word.setMeaning(rs.getString("MEANING_A")
 						+ rs.getString("MEANING_B"));
-//				word.setRoot(rs.getString("ROOT"));
-//				word.setRootMeaning(rs.getString("ROOT_MEANING"));
+				word.setRoot(rs.getString("ROOT"));
+				word.setRootMeaning(rs.getString("ROOT_MEANING"));
 				word.setHandoutPage(rs.getString("HANDOUT_PAGE"));
 				try {
 					
@@ -586,6 +593,7 @@ public class MakeOutQuestions {
 				} catch (Exception e) {
 					word.setMaleVoice("");
 				}
+				
 				wordList.add(word);
 			}
 		} catch (SQLException e) {
@@ -599,12 +607,33 @@ public class MakeOutQuestions {
 		}
 		return wordList;
 	}
-
+	public void saveWord2Words(Connection connection,Words word){
+		
+		
+		String ss = "insert into words(WORD,MEANING,ROOT,ROOT_MEANING,HANDOUT_PAGE,PRONUNCATION,MALE_VOIVE) values('"
+				+ word.getWord()
+				+ "','"
+				+ word.getMeaning()
+				+ "','"
+				+ word.getRoot()
+				+ "','"
+				+ word.getRootMeaning()
+				+ "','"
+				+ word.getHandoutPage()
+				+ "','"
+				+ word.getPronunciation().replace("'", "‘")
+				// + "','" + words.getPronunciation()
+				+ "','" + word.getMaleVoice() + "');";
+		try {
+			connection.createStatement().executeUpdate(ss.toString());
+		} catch (Exception e) {
+			
+			e.printStackTrace();
+		}
+	}
 	/**
 	 * 递归生成itemCode
-	 * 
-	 * @param r
-	 *            已有序号集合
+	 * @param r  已有序号集合
 	 * @param itCode
 	 * @return
 	 */
@@ -619,10 +648,8 @@ public class MakeOutQuestions {
 		return itemCode;
 
 	}
-
 	/**
 	 * 获取时间格式
-	 * 
 	 * @param time
 	 * @return
 	 */
@@ -632,23 +659,21 @@ public class MakeOutQuestions {
 		time = formatter.format(d);
 		return time;
 	}
-
 	/**
 	 * 根据itemCode生成答案顺序
-	 * 
 	 * @param itemCode
 	 * @return
 	 */
-	public int getOrderCode(String itemCode) {
+	public int getOrderCode(String itemCode){
 		int orderCode = 0;
-		if (itemCode.equals("A")) {
-			orderCode = 1;
-		} else if (itemCode.equals("B")) {
-			orderCode = 2;
-		} else if (itemCode.equals("C")) {
-			orderCode = 3;
-		} else {
-			orderCode = 4;
+		if(itemCode.equals("A")){
+			orderCode =1;
+		}else if(itemCode.equals("B")){
+			orderCode =2;
+		}else if(itemCode.equals("C")){
+			orderCode =3;
+		}else{
+			orderCode =4;
 		}
 		return orderCode;
 	}

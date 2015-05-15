@@ -85,25 +85,25 @@ public class WordsPageProcessor implements PageProcessor {
 			e1.printStackTrace();
 		}
 		//***************爬取单词*****************
-		int count = wordL.size();
+		/*int count = wordL.size();
 		int counts = wordL.size();
-		/*for (String string : wordL) {
+		for (String string : wordL) {
 
 			Spider.create(new WordsPageProcessor()).addUrl("http://dict.cn/" + string).run();
 			System.out.println("未转/总数："+--count+"/"+counts);
-		}*/
+		}
 		//System.out.println("待转换单词个数："+words.length);
-		System.out.println("爬取用时："+(System.currentTimeMillis()-startTime)/1000/60+"分");
+		System.out.println("爬取用时："+(System.currentTimeMillis()-startTime)/1000/60+"分");*/
 		
 		//****************保存******************
-		System.out.println("保存");
-		/*try {
+		/*System.out.println("保存");
+		try {
 			saveWords();
 		} catch (SQLException e) {
 			e.printStackTrace();
-		}*/
+		}
 		System.out.println("共计用时："+(System.currentTimeMillis()-startTime)/1000/60+"分");
-		System.out.println("保存完成");
+		System.out.println("保存完成");*/
 		
 		//***************导出********************
 		System.out.println("导出开始");
@@ -179,8 +179,7 @@ public class WordsPageProcessor implements PageProcessor {
     			onnection.close();
     		}
         	
-            OutputStream out = new FileOutputStream("E://单词导出new1.xls");
-            System.out.println(wordList.size());
+            OutputStream out = new FileOutputStream("E://单词导出new.xls");
             ex.exportExcel(headers, wordList, out);
             out.close();
             JOptionPane.showMessageDialog(null, "导出成功!");
@@ -248,7 +247,7 @@ public class WordsPageProcessor implements PageProcessor {
 		Connection onnection = JDBCConnection.getJDBCConnection().getConnection();
 		ResultSet rs = null;
 		try {
-				sql="select WORD from words  ";
+				sql="select WORD from words WHERE PRONUNCATION='' ";
 				System.out.println(sql);
 				java.sql.Statement statement = onnection.createStatement();
 				rs=statement.executeQuery(sql);

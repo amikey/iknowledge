@@ -35,7 +35,7 @@ public class ImportWords extends HttpServlet {
 				// System.out.println("创建数据表成功");
 				ReadExcel read = new ReadExcel();
 				// List<Words> word = read.readXls(getFile(path));
-				List<Words> word = read.readXls("E:\\iknowledge\\单词导入模版.xlsx");
+				List<Words> word = read.readXls("E:\\iknowledge\\新单词.xlsx");
 				int index = 0;
 				StringBuffer erro = new StringBuffer();
 				System.out.println(word.get(1).getWord());
