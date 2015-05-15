@@ -96,11 +96,7 @@ public class WordsPageProcessor implements PageProcessor {
 		System.out.println("爬取用时："+(System.currentTimeMillis()-startTime)/1000/60+"分");*/
 		
 		//****************保存******************
-<<<<<<< HEAD
 		/*System.out.println("保存");
-=======
-		System.out.println("保存");
->>>>>>> parent of 9481b33... 增加出题策略代码 MakeTest.java 引入hibernate
 		try {
 			saveWords();
 		} catch (SQLException e) {

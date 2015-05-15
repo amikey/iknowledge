@@ -562,7 +562,6 @@ public class MakeOutQuestions {
 		java.sql.Statement statement;
 		ResultSet rs = null;
 		try {
-<<<<<<< HEAD
 
 			sql = "SELECT w.id id,w.word WORD,d.word_prop MEANING_A,d.definition MEANING_B,\r\n" + 
 					"r.word ROOT,r.definition ROOT_MEANING,\r\n" + 
@@ -571,22 +570,16 @@ public class MakeOutQuestions {
 					" FROM wd_word w LEFT JOIN wd_word_def d ON w.id = d.word_id LEFT JOIN  wd_word_root r ON w.word_root_id = r.id";
 
 			System.out.println(sql);
-=======
 			sql = "select * from words ";
->>>>>>> parent of 9481b33... 增加出题策略代码 MakeTest.java 引入hibernate
 			statement = connection.createStatement();
 			rs = statement.executeQuery(sql);
 			while (rs.next()) {
 				Words word = new Words();
 				word.setId(rs.getInt("id"));
 				word.setWord(rs.getString("WORD"));
-<<<<<<< HEAD
 
 				word.setMeaning(rs.getString("MEANING_A")
 						+ rs.getString("MEANING_B"));
-=======
-				word.setMeaning(rs.getString("MEANING"));
->>>>>>> parent of 9481b33... 增加出题策略代码 MakeTest.java 引入hibernate
 				word.setRoot(rs.getString("ROOT"));
 				word.setRootMeaning(rs.getString("ROOT_MEANING"));
 				word.setHandoutPage(rs.getString("HANDOUT_PAGE"));
@@ -615,7 +608,6 @@ public class MakeOutQuestions {
 		}
 		return wordList;
 	}
-<<<<<<< HEAD
 	public void saveWord2Words(Connection connection,Words word){
 		
 		
@@ -640,8 +632,6 @@ public class MakeOutQuestions {
 			e.printStackTrace();
 		}
 	}
-=======
->>>>>>> parent of 9481b33... 增加出题策略代码 MakeTest.java 引入hibernate
 	/**
 	 * 递归生成itemCode
 	 * @param r  已有序号集合
