@@ -10,6 +10,8 @@ public class WordTest {
 	private String teacherCode;
 	private String teacherName;
 	private Integer timuNum;
+	private Integer startNum;
+	private Integer endNum;
 	private Date endTime;
 	private Date createTime;
 	private Date updateTime;
@@ -56,6 +58,19 @@ public class WordTest {
 	}
 	public void setTimuNum(Integer timuNum) {
 		this.timuNum = timuNum;
+	}
+	
+	public Integer getStartNum() {
+		return startNum;
+	}
+	public void setStartNum(Integer startNum) {
+		this.startNum = startNum;
+	}
+	public Integer getEndNum() {
+		return endNum;
+	}
+	public void setEndNum(Integer endNum) {
+		this.endNum = endNum;
 	}
 	public Date getEndTime() {
 		return endTime;

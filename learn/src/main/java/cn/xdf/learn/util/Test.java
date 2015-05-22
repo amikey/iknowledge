@@ -12,8 +12,13 @@ public class Test {
 		/*String s1 = "123456abcde";
 		String s2 = "111222bbbcc";
 		System.out.println(new Test().findSame(s1, s2));*/
-		int random = new Random().nextInt(4)+ 1;
-		System.out.println(random);
+		/*int random = new Random().nextInt(4)+ 1;
+		System.out.println(random);*/
+		String s2 = ",";
+		String[] ss = s2.split(",");
+		System.out.println(ss.length);
+//		System.out.println(s2.substring(0,s2.length()-1));
+		
 	}
 
 	public String findSame(String s1, String s2) {

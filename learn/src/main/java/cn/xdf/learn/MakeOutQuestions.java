@@ -59,7 +59,7 @@ public class MakeOutQuestions {
 		int itemid = 0;
 		for (Words words2 : words) {
 			int right = new Random().nextInt(4);
-			String sql = "INSERT INTO wd_timu (timu_type,audio,timu,right_ans,word_id,word,create_time,update_time)values(1,'"
+			String sql = "INSERT INTO wd_word_timu (timu_type,audio,timu,right_ans,word_id,word,create_date,update_date)values(1,'"
 					+ words2.getMaleVoice()
 					+ "','"
 					+ words2.getMeaning()
@@ -84,7 +84,7 @@ public class MakeOutQuestions {
 			// 查询题干ID
 			ResultSet rs = null;
 
-			String itemSql = "SELECT MAX(id) id FROM wd_timu ";
+			String itemSql = "SELECT MAX(id) id FROM wd_word_timu ";
 			try {
 				statement = connection.createStatement();
 				rs = statement.executeQuery(itemSql);
@@ -117,7 +117,7 @@ public class MakeOutQuestions {
 				}
 
 				
-				String sql2 = "INSERT INTO wd_timu_item (item_code,item_name,order_num,timu_id,create_time,update_time)values('"
+				String sql2 = "INSERT INTO wd_timu_item (item_code,item_name,order_num,timu_id,create_date,update_date)values('"
 						+ itemCode
 						+ "','"
 						+ words3.getWord()
@@ -139,7 +139,7 @@ public class MakeOutQuestions {
 				}
 
 			}
-			String sql3 = "INSERT INTO wd_timu_item (item_code,item_name,order_num,timu_id,create_time,update_time)values('"
+			String sql3 = "INSERT INTO wd_timu_item (item_code,item_name,order_num,timu_id,create_date,update_date)values('"
 					+ code[right]
 					+ "','"
 					+ words2.getWord()
@@ -179,7 +179,7 @@ public class MakeOutQuestions {
 		int itemid = 0;
 		for (Words words2 : words) {
 			int right = new Random().nextInt(4);
-			String sql = "INSERT INTO wd_timu (timu_type,audio,timu,right_ans,word_id,word,create_time,update_time)values(2,'"
+			String sql = "INSERT INTO wd_word_timu (timu_type,audio,timu,right_ans,word_id,word,create_date,update_date)values(2,'"
 					+ words2.getMaleVoice()
 					+ "','"
 					+ words2.getWord()
@@ -204,7 +204,7 @@ public class MakeOutQuestions {
 			// 查询题干ID
 			ResultSet rs = null;
 
-			String itemSql = "SELECT MAX(id) id FROM wd_timu ";
+			String itemSql = "SELECT MAX(id) id FROM wd_word_timu ";
 			try {
 				statement = connection.createStatement();
 				rs = statement.executeQuery(itemSql);
@@ -231,7 +231,7 @@ public class MakeOutQuestions {
 					r.add(itemCode);
 				}
 				
-				String sql2 = "INSERT INTO wd_timu_item (item_code,item_name,order_num,timu_id,create_time,update_time)values('"
+				String sql2 = "INSERT INTO wd_timu_item (item_code,item_name,order_num,timu_id,create_date,update_date)values('"
 						+ itemCode
 						+ "','"
 						+ words3.getMeaning()
@@ -253,7 +253,7 @@ public class MakeOutQuestions {
 				}
 
 			}
-			String sql3 = "INSERT INTO wd_timu_item (item_code,item_name,order_num,timu_id,create_time,update_time)values('"
+			String sql3 = "INSERT INTO wd_timu_item (item_code,item_name,order_num,timu_id,create_date,update_date)values('"
 					+ code[right]
 					+ "','"
 					+ words2.getMeaning()
@@ -293,7 +293,7 @@ public class MakeOutQuestions {
 		int itemid = 0;
 		for (Words words2 : words) {
 			int right = new Random().nextInt(4);
-			String sql = "INSERT INTO wd_timu (timu_type,audio,timu,right_ans,word_id,word,create_time,update_time)values(3,'"
+			String sql = "INSERT INTO wd_word_timu (timu_type,audio,timu,right_ans,word_id,word,create_date,update_date)values(3,'"
 					+ words2.getMaleVoice()
 					+ "','"
 					+ words2.getMaleVoice()
@@ -318,7 +318,7 @@ public class MakeOutQuestions {
 			// 查询题干ID
 			ResultSet rs = null;
 
-			String itemSql = "SELECT MAX(id) id FROM wd_timu ";
+			String itemSql = "SELECT MAX(id) id FROM wd_word_timu ";
 			try {
 				statement = connection.createStatement();
 				rs = statement.executeQuery(itemSql);
@@ -345,7 +345,7 @@ public class MakeOutQuestions {
 					r.add(itemCode);
 				}
 				
-				String sql2 = "INSERT INTO wd_timu_item (item_code,item_name,order_num,timu_id,create_time,update_time)values('"
+				String sql2 = "INSERT INTO wd_timu_item (item_code,item_name,order_num,timu_id,create_date,update_date)values('"
 						+ itemCode
 						+ "','"
 						+ words3.getWord()
@@ -367,7 +367,7 @@ public class MakeOutQuestions {
 				}
 
 			}
-			String sql3 = "INSERT INTO wd_timu_item (item_code,item_name,order_num,timu_id,create_time,update_time)values('"
+			String sql3 = "INSERT INTO wd_timu_item (item_code,item_name,order_num,timu_id,create_date,update_date)values('"
 					+ code[right]
 					+ "','"
 					+ words2.getWord()
@@ -404,7 +404,7 @@ public class MakeOutQuestions {
 				.getConnection();
 		List<Words> words = getAllWords();
 		for (Words words2 : words) {
-			String sql = "INSERT INTO wd_timu (timu_type,audio,timu,right_ans,word_id,word,create_time,update_time)values(4,'"
+			String sql = "INSERT INTO wd_word_timu (timu_type,audio,timu,right_ans,word_id,word,create_date,update_date)values(4,'"
 					+ words2.getMaleVoice()
 					+ "','"
 					+ words2.getMaleVoice()
@@ -563,14 +563,13 @@ public class MakeOutQuestions {
 		ResultSet rs = null;
 		try {
 
-			sql = "SELECT w.id id,w.word WORD,d.word_prop MEANING_A,d.definition MEANING_B,\r\n" + 
-					"r.word ROOT,r.definition ROOT_MEANING,\r\n" + 
-					" w.page_num HANDOUT_PAGE,\r\n" + 
-					" w.phonetic_us PRONUNCATION,w.pronun_us_man MALE_VOIVE \r\n" + 
-					" FROM wd_word w LEFT JOIN wd_word_def d ON w.id = d.word_id LEFT JOIN  wd_word_root r ON w.word_root_id = r.id";
+			sql = "SELECT w.id id,wd.word WORD,d.word_prop MEANING_A,d.definition MEANING_B,\r\n" + 
+					"					w.cur_page HANDOUT_PAGE,\r\n" + 
+					"					wd.phonetic_us PRONUNCATION,wd.pronun_us_man MALE_VOIVE FROM wd_handout_detail w \r\n" + 
+					"					LEFT JOIN wd_word_def d ON w.id = d.word_id LEFT JOIN wd_word wd ON wd.id = d.word_id GROUP BY WORD ";
 
 			System.out.println(sql);
-			sql = "select * from words ";
+//			sql = "select * from words ";
 			statement = connection.createStatement();
 			rs = statement.executeQuery(sql);
 			while (rs.next()) {
@@ -580,8 +579,8 @@ public class MakeOutQuestions {
 
 				word.setMeaning(rs.getString("MEANING_A")
 						+ rs.getString("MEANING_B"));
-				word.setRoot(rs.getString("ROOT"));
-				word.setRootMeaning(rs.getString("ROOT_MEANING"));
+				/*word.setRoot(rs.getString("ROOT"));
+				word.setRootMeaning(rs.getString("ROOT_MEANING"));*/
 				word.setHandoutPage(rs.getString("HANDOUT_PAGE"));
 				try {
 					
@@ -594,7 +593,7 @@ public class MakeOutQuestions {
 				} catch (Exception e) {
 					word.setMaleVoice("");
 				}
-				
+//				saveWord2Words(connection,word);
 				wordList.add(word);
 			}
 		} catch (SQLException e) {
@@ -608,18 +607,20 @@ public class MakeOutQuestions {
 		}
 		return wordList;
 	}
-	public void saveWord2Words(Connection connection,Words word){
+	public static void saveWord2Words(Connection connection,Words word){
 		
 		
-		String ss = "insert into words(WORD,MEANING,ROOT,ROOT_MEANING,HANDOUT_PAGE,PRONUNCATION,MALE_VOIVE) values('"
+		String ss = "insert into words(id,WORD,MEANING,HANDOUT_PAGE,PRONUNCATION,MALE_VOIVE) values('"
+				+ word.getId()
+				+ "','"
 				+ word.getWord()
 				+ "','"
 				+ word.getMeaning()
 				+ "','"
-				+ word.getRoot()
+				/*+ word.getRoot()
 				+ "','"
 				+ word.getRootMeaning()
-				+ "','"
+				+ "','"*/
 				+ word.getHandoutPage()
 				+ "','"
 				+ word.getPronunciation().replace("'", "‘")

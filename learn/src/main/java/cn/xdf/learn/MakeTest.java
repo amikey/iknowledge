@@ -31,7 +31,7 @@ public class MakeTest {
 		System.out.println(wordT.size());
 		
 		for (WordTest wordTest : wordT) {
-			List<Integer> ids = getWordId(wordTest.getTestName(),wordTest.getTimuNum());
+			List<Integer> ids = getWordId(wordTest);
 			int index = 0;
 			for (Integer wordId : ids) {
 				index++;
@@ -59,19 +59,19 @@ public class MakeTest {
 
 	}
 
-	public List<Integer> getWordId(String pages,int timuNum){
+	public List<Integer> getWordId(WordTest wordTest){
 		List<Integer> ids = new ArrayList<Integer>();
 		Connection connection = JDBCConnection.getJDBCConnection()
 				.getConnection();
 		ResultSet rs = null;
-		String[] page = pages.split("-");
-		String findSql = "SELECT id FROM wd_word WHERE page_num >= "+page[0]+" AND page_num <= "+page[1]+" ORDER BY rand() LIMIT "+timuNum;
+//		String[] page = pages.split("-");
+		String findSql = "SELECT word_id FROM wd_handout_detail WHERE cur_page >= "+wordTest.getStartNum()+" AND cur_page <= "+wordTest.getEndNum()+" ORDER BY rand() LIMIT "+wordTest.getTimuNum();
 		java.sql.Statement statement;
 		try {
 			statement = connection.createStatement();
 			rs = statement.executeQuery(findSql);
 			while (rs.next()) {
-				ids.add(rs.getInt("id"));
+				ids.add(rs.getInt("word_id"));
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -99,7 +99,7 @@ public class MakeTest {
 				.getConnection();
 		ResultSet rs = null;
 		try {
-			sql = "select DISTINCT(page_num) from wd_word ";
+			sql = "select DISTINCT(cur_page) from wd_handout_detail ";
 			System.out.println(sql);
 			java.sql.Statement statement = onnection.createStatement();
 			rs = statement.executeQuery(sql);
@@ -145,6 +145,8 @@ public class MakeTest {
 				word.setTeacherCode(rs.getString("teacher_code"));
 				word.setTeacherName(rs.getString("teacher_name"));
 				word.setTimuNum(rs.getInt("timu_num"));
+				word.setStartNum(rs.getInt("start_num"));
+				word.setEndNum(rs.getInt("end_num"));
 				word.setEndTime(rs.getDate("end_time"));
 				word.setCreateTime(rs.getDate("create_time"));
 				word.setUpdateTime(rs.getDate("update_time"));

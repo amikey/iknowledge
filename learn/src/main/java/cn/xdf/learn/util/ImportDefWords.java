@@ -15,7 +15,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import cn.xdf.learn.entity.Words;
 
-public class ImportWords extends HttpServlet {
+public class ImportDefWords extends HttpServlet {
 
 	public void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
@@ -31,15 +31,17 @@ public class ImportWords extends HttpServlet {
 			if (result != -1) {
 				ReadExcel read = new ReadExcel();
 				// List<Words> word = read.readXls(getFile(path));
-				List<Words> word = read
-						.readXls(5,"C:\\Users\\Administrator\\Desktop\\新东方词汇\\TOEFL单词汇总-最新版 - 副本.xlsx");
+//				List<Words> word = read.readXls(5,"C:\\Users\\Administrator\\Desktop\\新东方词汇\\TOEFL单词汇总-最新版 - 副本.xlsx");
+//				List<Words> word = read.readXls(8,"C:\\Users\\Administrator\\Desktop\\新东方词汇\\SAT单词汇总-最新版 - 副本 (2).xlsx");
+//				List<Words> word = read.readXls(11,"C:\\Users\\Administrator\\Desktop\\新东方词汇\\SSAT词汇总表-最新版 - 副本.xlsx");
+				List<Words> word = read.readXls(14,"C:\\Users\\Administrator\\Desktop\\新东方词汇\\TJ词汇总表-最新版 - 副本.xlsx");
 				int index = 0;
-				StringBuffer erro = new StringBuffer();
 				int cur_pages = 1;
 				int order_nums = 1;
+				StringBuffer erro = new StringBuffer();
 				for (Words words : word) {
 					int wordid = 0;
-
+					int wordid1 = 0;
 					String ss = "insert into wd_word(word,phonetic_us,pronun_us_man,server_id) values('"
 							+ words.getWord()
 							+ "','["
@@ -49,11 +51,110 @@ public class ImportWords extends HttpServlet {
 					try {
 						result = connection.createStatement().executeUpdate(
 								ss.toString());
+						ResultSet rs = null;
+
+						
+						String wordSql = "SELECT  id FROM wd_word where word = '"+words.getWord()+"'";
+						try {
+							Statement statement = connection.createStatement();
+							rs = statement.executeQuery(wordSql);
+							while (rs.next()) {
+								wordid1 = rs.getInt("id");
+							}
+						} catch (SQLException e1) {
+							e1.printStackTrace();
+						}
+						//如果出现唯一约束异常，即单词重复，查出重复单词id继续添加释义到释义表
 					} catch (com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException e) {
 						index++;
 						erro.append(words.getWord() + " \r\n  ");
-						e.printStackTrace();
+						
+						ResultSet rs = null;
+
+						
+						String wordSql = "SELECT  id FROM wd_word where word = '"+words.getWord()+"'";
+						try {
+							Statement statement = connection.createStatement();
+							rs = statement.executeQuery(wordSql);
+							while (rs.next()) {
+								wordid1 = rs.getInt("id");
+							}
+						} catch (SQLException e1) {
+							e1.printStackTrace();
+						}
+						
+						String[] props = words.getProp().split("/");
+						if (props.length > 1) {
+							for (int i = 0; i < props.length; i++) {
+								java.sql.Statement statement;
+								String[] meanings  =null;
+								meanings = words.getMeaning().split("；");
+								if (meanings.length<1) {
+									meanings = words.getMeaning().split(";");
+								}
+								String meaning = null;
+								try {
+									meaning = meanings[i].substring(meanings[i].lastIndexOf(".") + 1);
+									
+								} catch (Exception e2) {
+									try {
+										meaning = meanings[i];
+										
+									} catch (Exception e3) {
+										meaning = meanings[0];
+									}
+								}
+								
+								String defSql = "insert into wd_word_def(word_id,word_prop,definition,book_tag) values("
+										+ wordid1
+										+ ",'"
+										+ props[i]
+										+ "','"
+										+ meaning + "',"+words.getBookTag()+") ";
+								try {
+									statement = connection.createStatement();
+									statement.executeUpdate(defSql);
+								} catch (SQLException e4) {
+									e4.printStackTrace();
+								}
+							}
+						} else {
+							java.sql.Statement statement;
+							String defSql = "insert into wd_word_def(word_id,word_prop,definition,book_tag) values("
+									+ wordid1
+									+ ",'"
+									+ words.getProp()
+									+ "','"
+									+ words.getMeaning() + "',"+words.getBookTag()+")";
+							try {
+								statement = connection.createStatement();
+								statement.executeUpdate(defSql);
+							} catch (SQLException e5) {
+								e5.printStackTrace();
+							}
+						}
+						
+						
 						continue;
+					}finally{
+					//不管单词是否重复都向单词详细表中插入
+						//系统生成页码，45页一组
+						if(cur_pages==46){
+							cur_pages = 1;
+						}
+						//存储单词详细表
+						java.sql.Statement statement;
+						String defDSql = "insert into wd_handout_detail(cur_page,book_id,word_id,word,order_num,definition) values("
+								+ cur_pages + ","+words.getBookTag()+","+wordid1+",'"+words.getWord()+"',"+order_nums+",'"+words.getProp()+words.getMeaning()+"')";
+
+						try {
+							statement = connection.createStatement();
+							statement.executeUpdate(defDSql);
+						} catch (SQLException e5) {
+							e5.printStackTrace();
+						}
+						cur_pages++;
+						order_nums++;
 					}
 					ResultSet rs = null;
 
@@ -67,39 +168,34 @@ public class ImportWords extends HttpServlet {
 					} catch (SQLException e) {
 						e.printStackTrace();
 					}
-					// 拆分单词词性
 					String[] props = words.getProp().split("/");
 					if (props.length > 1) {
 						for (int i = 0; i < props.length; i++) {
 							java.sql.Statement statement;
-							String[] meanings = null;
+							String[] meanings  =null;
 							meanings = words.getMeaning().split("；");
-							if (meanings.length < 1) {
+							if (meanings.length<1) {
 								meanings = words.getMeaning().split(";");
 							}
 							String meaning = null;
 							try {
-								meaning = meanings[i].substring(meanings[i]
-										.lastIndexOf(".") + 1);
-
+								meaning = meanings[i].substring(meanings[i].lastIndexOf(".") + 1);
+								
 							} catch (Exception e) {
 								try {
 									meaning = meanings[i];
-
+									
 								} catch (Exception e2) {
 									meaning = meanings[0];
 								}
 							}
-
+							
 							String defSql = "insert into wd_word_def(word_id,word_prop,definition,book_tag) values("
 									+ wordid
 									+ ",'"
 									+ props[i]
 									+ "','"
-									+ meaning
-									+ "',"
-									+ words.getBookTag()
-									+ ") ";
+									+ meaning + "',"+words.getBookTag()+") ";
 							try {
 								statement = connection.createStatement();
 								statement.executeUpdate(defSql);
@@ -114,9 +210,7 @@ public class ImportWords extends HttpServlet {
 								+ ",'"
 								+ words.getProp()
 								+ "','"
-								+ words.getMeaning()
-								+ "',"
-								+ words.getBookTag() + ")";
+								+ words.getMeaning() + "',"+words.getBookTag()+")";
 						try {
 							statement = connection.createStatement();
 							statement.executeUpdate(defSql);
@@ -155,24 +249,7 @@ public class ImportWords extends HttpServlet {
 							}
 						}
 					}
-
-					//系统生成页码，4页一组
-					if(cur_pages==45){
-						cur_pages = 1;
-					}
-					//存储单词详细表
-					java.sql.Statement statement;
-					String defDSql = "insert into wd_handout_detail(cur_page,book_id,word_id,word,order_num,definition) values("
-							+ cur_pages + ",2,"+wordid+",'"+words.getWord()+"',"+order_nums+",'"+words.getPronunciation()+"')";
-
-					try {
-						statement = connection.createStatement();
-						statement.executeUpdate(defDSql);
-					} catch (SQLException e) {
-						e.printStackTrace();
-					}
-					cur_pages++;
-					order_nums++;
+					
 				}
 				System.out.println(word.size());
 				System.out.println("重复单词：" + index + "个.包括\r\n " + erro);
@@ -208,7 +285,7 @@ public class ImportWords extends HttpServlet {
 
 	public static void main(String[] args) {
 		try {
-			new ImportWords().doPost(null, null);
+			new ImportDefWords().doPost(null, null);
 		} catch (ServletException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

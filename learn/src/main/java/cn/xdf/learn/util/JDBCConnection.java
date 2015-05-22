@@ -26,7 +26,7 @@ public class JDBCConnection {
 		// 避免中文乱码要指定useUnicode和characterEncoding
 		// 执行数据库操作之前要在数据库管理系统上创建一个数据库，名字自己定，
 		// 下面语句之前就要先创建javademo数据库
-		String url = "jdbc:mysql://localhost:3306/xdflearn?"
+		String url = "jdbc:mysql://localhost:3306/iknowledge?"
 				+ "user=root&password=root&useUnicode=true&characterEncoding=UTF8";
 		// 之所以要使用下面这条语句，是因为要使用MySQL的驱动，所以我们要把它驱动起来，
 		// 可以通过Class.forName把它加载进去，也可以通过初始化来驱动起来，下面三种形式都可以
