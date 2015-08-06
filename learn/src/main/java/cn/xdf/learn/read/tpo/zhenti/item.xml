@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+	<fields>
+		<field>
+			<type>java.lang.Integer</type>
+			<name>id</name>
+		</field>
+		<field>
+			<type>java.lang.Integer</type>
+			<name>问题id</name>
+		</field>
+		<field>
+			<type>java.lang.String</type>
+			<name>选项标识</name>
+		</field>
+		<field>
+			<type>java.lang.String</type>
+			<name>选项</name>
+		</field>
+	</fields>
+</root>

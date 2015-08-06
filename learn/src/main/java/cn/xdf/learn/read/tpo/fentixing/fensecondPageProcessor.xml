@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+	<fields>
+		<field>
+			<type>java.lang.Integer</type>
+			<name>id</name>
+		</field>
+		<field>
+			<type>java.lang.Integer</type>
+			<name>类型id</name>
+		</field>
+		<field>
+			<type>java.lang.String</type>
+			<name>阅读原文</name>
+		</field>
+		<field>
+			<type>java.lang.String</type>
+			<name>中文翻译</name>
+		</field>
+		<field>
+			<type>java.lang.String</type>
+			<name>文章地址</name>
+		</field>
+	</fields>
+</root>

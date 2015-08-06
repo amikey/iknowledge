@@ -1,299 +1,156 @@
-package cn.xdf.learn;
+package cn.xdf.learn.read.tpo.zhenti;
 
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URL;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.swing.JOptionPane;
-
 import us.codecraft.webmagic.Page;
 import us.codecraft.webmagic.Site;
 import us.codecraft.webmagic.Spider;
 import us.codecraft.webmagic.processor.PageProcessor;
-import cn.xdf.learn.entity.Words;
-import cn.xdf.learn.util.ExportExcel;
-import cn.xdf.learn.util.JDBCConnection;
+
+import com.bingo.annotation.ExcelColumn;
+import com.bingo.annotation.ExcelEntity;
+import com.bingo.annotation.ExcelId;
+import com.bingo.annotation.ExcelJoinColumn;
+import com.bingo.annotation.ExcelOneToMany;
+import com.bingo.annotation.ExcelSheet;
+import com.bingo.io.DefaultExcelEntityWriter;
+import com.bingo.io.EntityWriter;
+import com.bingo.model.Excel;
+import com.bingo.utils.FileUtil;
 
 /**
  * @author sunxingyang<br>
  */
-public class WordsPageProcessor implements PageProcessor {
+@ExcelEntity
+@ExcelSheet(name = "类型表", model = "/cn/xdf/learn/read/tpo/zhenti/firstPageProcessor.xml")
+public class FirstPageProcessor implements PageProcessor,Serializable {
+	@ExcelId(auto = true)
+	private Integer id;
+	@ExcelColumn(name="类型")
+	private String category;
+	
+	public Integer getId() {
+		return id;
+	}
 
+	public void setId(Integer id) {
+		this.id = id;
+	}
+	@ExcelOneToMany
+	@ExcelJoinColumn(name = "类型id")
+	List<SecondPageProcessor> sppList = new ArrayList<SecondPageProcessor>();
+	
+	public List<SecondPageProcessor> getSppList() {
+		return sppList;
+	}
+
+	public void setSppList(List<SecondPageProcessor> sppList) {
+		this.sppList = sppList;
+	}
+
+	public String getCategory() {
+		return category;
+	}
+
+	public void setCategory(String category) {
+		this.category = category;
+	}
 	private Site site = Site.me().setSleepTime(500).setRetryTimes(100)
 			.setTimeOut(15000);
+	static int index = 1;
 
-	
-	static List<Words> dataset = new ArrayList<Words>();
 	public void process(Page page) {
-		
-		//根据页面位置获取美式音标
-		String pronunciation = page.getHtml().xpath("//div[@id='content']/div[@class='main']/div[@class='word']/div[@class='phonetic']/span[1]/bdo/text()")
-				.toString();
-		//MP3的URL地址 示例：muTd300h2230716d0f31673e090a17af8de9d91f.mp3?t=telefax
-		String mp3Url = page.getHtml().xpath("//div[@id='content']/div[@class='main']/div[@class='word']/div[@class='phonetic']/span[2]/i[2]/@naudio")
-				.toString();
-		String word = page.getUrl().toString().split("/")[3];
-		//特殊音标替换
-//		String newPronunciation = conversionSpecialCharacters(word,pronunciation);
-		String newPronunciation = null;
-		/*try {
-			newPronunciation = new String(pronunciation.getBytes("ISO8859-1"), "GBK");
-		} catch (UnsupportedEncodingException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}*/
-		//下载MP3
-		String maleVoice = downloadVioce(mp3Url);
-		
-		//将转换完成的单词放到集合中
-		Words wordEntity = new Words();
-		wordEntity.setWord(word == null?"":word);
-		wordEntity.setMeaning("");
-		wordEntity.setRoot("");
-		wordEntity.setRootMeaning("");
-		wordEntity.setHandoutPage("");
-		wordEntity.setPronunciation(pronunciation == null?"":pronunciation);
-		wordEntity.setMaleVoice(maleVoice == null?"":maleVoice);
-		dataset.add(wordEntity);
-
-		System.out.println("单词：" + word
-				+ "发音" + pronunciation );
-		
+		String maincol = "//div[@class='g-kmf-wrapper']/div[@class='i-toefl-listen']/div[@class='g-clearfix']\n"
+				+ "/div[@class='kmf-maincol']";
+		// 类别 例子：地理/环境/能源 (21)
+		this.setCategory(page.getHtml().xpath(maincol+ "/div[@class='wrap-left-top new-list-left g-mod-shadow']/div[2]/ul[1]/li["
+				+ index + "]/a[1]/text()").toString().trim());
+		// 每种类型的数量
+		int qNum = Integer.parseInt(category.substring(
+				category.indexOf("(") + 1, category.indexOf(")")));
+		// 阅读试题链接
+		StringBuffer readLinks = new StringBuffer();
+		for (int i = 1; i <= qNum; i++) {
+			readLinks
+					.append(page
+							.getHtml()
+							.xpath(maincol
+									+ "/div[@class='wrap-content-list']/div[@class='box-wrap-content']\n"
+									+ "/div[@class='box-items clearfix']/div[@class='contents-box clearfix']/div["
+									+ i
+									+ "]\n"
+									+ "/div[@class='boxs-scroll']/p[1]/a[1]/@href")
+							.toString());
+			readLinks.append(",");
+		}
+		String[] ss = readLinks.toString().split(",");
+		for (String string : ss) {
+			SecondPageProcessor spp = new SecondPageProcessor();
+			Spider.create(spp).addUrl(string).run();
+			spp.setUrl(string);
+			sppList.add(spp);
+		}
+		this.setSppList(sppList);
 	}
 
 	public Site getSite() {
 		return site;
-
 	}
-
 	public static void main(String[] args) {
-		long startTime = System.currentTimeMillis();
-		List<String> wordL=null;
-		try {
-			wordL = getAllWords();
-		} catch (SQLException e1) {
-			e1.printStackTrace();
+		List<FirstPageProcessor> fppList = new ArrayList<FirstPageProcessor>();
+		for (int i = 1; i <= 7; i++) {
+			FirstPageProcessor fp = new FirstPageProcessor();
+			Spider.create(fp).addUrl("http://toefl.kaomanfen.com/read/tpo?t=tpo&c=2&s="+ i).run();
+			fppList.add(fp);
+			index++;
 		}
-		//***************爬取单词*****************
-		/*int count = wordL.size();
-		int counts = wordL.size();
-		for (String string : wordL) {
+		
+		
 
-			Spider.create(new WordsPageProcessor()).addUrl("http://dict.cn/" + string).run();
-			System.out.println("未转/总数："+--count+"/"+counts);
-		}
-		//System.out.println("待转换单词个数："+words.length);
-		System.out.println("爬取用时："+(System.currentTimeMillis()-startTime)/1000/60+"分");*/
+		EntityWriter writer = new DefaultExcelEntityWriter("E://test//TPO真题.xlsx");
+		Map<Object, Object> params = new HashMap<Object, Object>();
+		List<Class<?>> classes = new ArrayList<Class<?>>();
+		classes.add(FirstPageProcessor.class);
+		classes.add(SecondPageProcessor.class);
+		classes.add(ThirdPageProcessor.class);
+		classes.add(Item.class);
+		params.put(DefaultExcelEntityWriter.SHEET_WIDTH_HEADS, classes);
+		params.put(DefaultExcelEntityWriter.SHEET_ORDER, classes);
+		params.put(DefaultExcelEntityWriter.WRITE_EXCEL_OBJECT, true);
+		writer.setParamters(params);
+		writer.write(fppList, FirstPageProcessor.class);
 		
-		//****************保存******************
-		/*System.out.println("保存");
-		try {
-			saveWords();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		System.out.println("共计用时："+(System.currentTimeMillis()-startTime)/1000/60+"分");
-		System.out.println("保存完成");*/
+	}
+	
+	public static void readExcle(){
+		Excel ex = FileUtil.readObject("E:/test/TPO真题2.object", Excel.class);
+		List<com.bingo.model.ExcelSheet> sheets = ex.getSheets();
 		
-		//***************导出********************
-		System.out.println("导出开始");
-		try {
-			exportExcel();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-	
-        //*************************************  
-    }
-	
-	/**
-	 * 保存单词到数据库补全缺失的音标
-	 * @throws SQLException
-	 */
-	public static void saveWords() throws SQLException{
-		String sql ;
-		Connection onnection = JDBCConnection.getJDBCConnection().getConnection();
-		String wordss = null;
-		try {
-			for (Words word : dataset) {
-				wordss = word.getWord();
-				//由于 音标中的  ' 符号在 数据库操作时会产生错误，所以将其替换成 ’ 后续导出时 再 替换回来
-				//sql="update words set PRONUNCATION = '"+word.getPronunciation().replace("'", "‘")+"' , MALE_VOIVE = '"+word.getMaleVoice()+"' where (WORD = '"+word.getWord()+"' and PRONUNCATION ='')";
-				//sql="update words set PRONUNCATION = '"+word.getPronunciation().replace("'", "‘")+"' where WORD = '"+word.getWord()+"'";
-				sql="update words set  PRONUNCATION = '"+word.getPronunciation().replace("'", "‘")+"' , MALE_VOIVE = '"+word.getMaleVoice()+"' where WORD = '"+word.getWord()+"'";
-				System.out.println(sql);
-				java.sql.Statement statement = onnection.createStatement();
-				statement.executeUpdate(sql);
+		for (com.bingo.model.ExcelSheet excelSheet : sheets) {
+			List<List> xuanxiang = new ArrayList<List>();
+			if("选项表".equals(excelSheet.getName())){
+				xuanxiang = excelSheet.getContent();
+				
 			}
-		} catch (SQLException e) {
-			System.out.println("错误单词："+wordss);
-			e.printStackTrace();
-		}finally {
-			onnection.close();
-		}
-	}
-	/**
-	 * 将数据库中的数据导出到Excel
-	 * @throws SQLException
-	 */
-	public static void exportExcel() throws SQLException{
-		ExportExcel<Words> ex = new ExportExcel<Words>();
-        String[] headers = { "单词","词性和词义","词根","词根含义","讲义页码","美音音标","美音男声"};
-        try {
-
-        	String sql ;
-    		Connection onnection = JDBCConnection.getJDBCConnection().getConnection();
-    		ResultSet rs = null;
-    		List<Words> wordList = new ArrayList<Words>();
-    		try {
-    			
-    				sql="select * from words";
-    				System.out.println(sql);
-    				java.sql.Statement statement = onnection.createStatement();
-    				rs=statement.executeQuery(sql);
-    				while (rs.next()) {
-    					Words word = new Words();
-    				    word.setWord(rs.getString("WORD"));
-    				    word.setMeaning(rs.getString("MEANING"));
-    				    word.setRoot(rs.getString("ROOT"));
-    				    word.setRootMeaning(rs.getString("ROOT_MEANING"));
-    				    word.setHandoutPage(rs.getString("HANDOUT_PAGE"));
-    				    word.setPronunciation(rs.getString("PRONUNCATION").replace("‘", "'"));
-    				    word.setMaleVoice(rs.getString("MALE_VOIVE"));
-    				    wordList.add(word);
-    				   }
-    			
-    		} catch (SQLException e) {
-    			e.printStackTrace();
-    		}finally {
-    			onnection.close();
-    		}
-        	
-            OutputStream out = new FileOutputStream("E://单词导出new.xls");
-            ex.exportExcel(headers, wordList, out);
-            out.close();
-            JOptionPane.showMessageDialog(null, "导出成功!");
-            System.out.println("excel导出成功！");
-            
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-	}
-	/**
-	 * 下载并保存MP3文件
-	 * @param mp3Url
-	 */
-	public String  downloadVioce(String mp3Url){
-		//截取纯MP3路径
-				String[] mp3U = mp3Url.split("\\?");
-				String mp3Name = "dict_"+mp3U[1].split("=")[1];
-
-				InputStream in = null;
-				FileOutputStream f = null;
-				try {
-				//经验证第一次请求MP3时 需要在地址后加入单词 即  变量 mp3Url
-				in=new URL("http://audio.dict.cn/"+mp3Url).openConnection().getInputStream();  //创建连接、输入流
-				//创建文件输出流   重置MP3 文件名称  文件格式为  dict_单词.mp3  
-				/*File file = new File("E:/iknowledgeVoice/"+mp3Name+".mp3");
-				if(!file.exists()){
-					file.mkdir();
-				}*/
-				f = new FileOutputStream("E:/iknowledgeVoice/"+mp3Name+".mp3");
-				byte [] bb=new byte[1024];  //接收缓存
-				int len;
-				while( (len=in.read(bb))>0){ //接收
-				  f.write(bb, 0, len);  //写入文件
-				}
-				f.close();
-				in.close();
-				
-				} catch (Exception e) {
-					System.out.println(mp3Url);
-					e.printStackTrace();
-				}finally {
-					try {
-						if (f != null) {
-							f.close();
-						}
-						if(in !=null){
-							in.close();
-						}
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-				return mp3Name;
-	}
-	/**
-	 * 获取数据库中所有单词
-	 * @return
-	 * @throws SQLException
-	 */
-	public static List<String> getAllWords() throws SQLException {
-		List<String> wordList = new ArrayList<String>();
-        String sql ;
-		Connection onnection = JDBCConnection.getJDBCConnection().getConnection();
-		ResultSet rs = null;
-		try {
-				sql="select WORD from words WHERE PRONUNCATION='' ";
-				System.out.println(sql);
-				java.sql.Statement statement = onnection.createStatement();
-				rs=statement.executeQuery(sql);
-				while (rs.next()) {
-				    wordList.add(rs.getString("WORD"));
-				}
-			
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}finally {
-			onnection.close();
-		}
-        return wordList;
-	}
-	/**
-	 * 音标转换特殊字符
-	 * @param word 单词 
-	 * @param pronunciation 发音
-	 */
-	public String  conversionSpecialCharacters(String words,String pronunciation){
-		//需要替换的字符
-				Map<String, String> changes = new HashMap<String, String>();
-				changes.put("æ", "1");
-				changes.put("ɑː", "2");
-				changes.put("ɔː", "3");
-				changes.put("ə", "4");
-				changes.put("ʃ", "5");
-				changes.put("ŋ", "6");
-				changes.put("θ", "7");
-				changes.put("ʌ", "8");
-				changes.put("ʒ", "9");
-				changes.put("e", "A");// 音标有误 separate excel发音['sAp4`ret] 网站发音['sepərət]
-				// segregate excel发音 ['sAgrI`get] 网站发音['seɡrɪɡeɪt] [ˈsɛɡrɪˌɡet]
-				changes.put("ər", "B");
-				changes.put("ɜː", "C");
-				
-				//转换特殊字符
-				for (int i = 0; i < pronunciation.length(); i++) {
-					for (String key : changes.keySet()) {
-						char item = pronunciation.charAt(i);
-						if(key.equals(item+"")){
-							String newP = pronunciation.replace(key, changes.get(key));
-							pronunciation = newP;
+			if("问题表".equals(excelSheet.getName())){
+				List<List> wenti = excelSheet.getContent();
+				for (List listw : wenti) {
+					if("strong-insert js-scrollto".equals(listw.get(5))){
+						for (List listx : xuanxiang) {
+							if(listw.get(0).equals(listx.get(1))){
+								System.out.println();
+							}
 						}
 					}
+					
 				}
-		return pronunciation;
+			}
+		}
 	}
+	
 }
+
