@@ -11,6 +11,7 @@ import com.bingo.annotation.ExcelId;
 import com.bingo.annotation.ExcelJoinColumn;
 import com.bingo.annotation.ExcelOneToMany;
 import com.bingo.annotation.ExcelSheet;
+import com.bingo.annotation.ExcelTransient;
 
 import us.codecraft.webmagic.Page;
 import us.codecraft.webmagic.Site;
@@ -97,7 +98,7 @@ public class ThirdPageProcessor implements PageProcessor {
 		this.remarks = remarks;
 	}
 
-
+	@ExcelTransient
 	private Site site = Site.me().setSleepTime(500).setRetryTimes(100)
 			.setTimeOut(15000);
 	public void process(Page page) {

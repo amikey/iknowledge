@@ -9,6 +9,7 @@ import com.bingo.annotation.ExcelId;
 import com.bingo.annotation.ExcelJoinColumn;
 import com.bingo.annotation.ExcelOneToMany;
 import com.bingo.annotation.ExcelSheet;
+import com.bingo.annotation.ExcelTransient;
 
 import us.codecraft.webmagic.Page;
 import us.codecraft.webmagic.Site;
@@ -29,7 +30,12 @@ public class SecondPageProcessor implements PageProcessor {
 	private String contentCn;
 	@ExcelColumn(name ="文章地址")
 	private String url;
-	
+	@ExcelColumn(name ="TPO编号")
+	private String tpoNum;
+	@ExcelColumn(name ="英文题目")
+	private String enName;
+	@ExcelColumn(name ="中文题目")
+	private String cnName;
 	public String getUrl() {
 		return url;
 	}
@@ -72,6 +78,31 @@ public class SecondPageProcessor implements PageProcessor {
 	public void setTppList(List<ThirdPageProcessor> tppList) {
 		this.tppList = tppList;
 	}
+	
+	public String getTpoNum() {
+		return tpoNum;
+	}
+
+	public void setTpoNum(String tpoNum) {
+		this.tpoNum = tpoNum;
+	}
+	
+	public String getEnName() {
+		return enName;
+	}
+
+	public void setEnName(String enName) {
+		this.enName = enName;
+	}
+
+	public String getCnName() {
+		return cnName;
+	}
+
+	public void setCnName(String cnName) {
+		this.cnName = cnName;
+	}
+	@ExcelTransient
 	private Site site = Site.me().setSleepTime(500).setRetryTimes(100)
 			.setTimeOut(15000);
 	public void process(Page page) {

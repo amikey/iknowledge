@@ -7,7 +7,7 @@
 		</field>
 		<field>
 			<type>java.lang.Integer</type>
-			<name>文章id</name>
+			<name>标题id</name>
 		</field>
 		<field>
 			<type>java.lang.String</type>

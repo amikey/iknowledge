@@ -7,31 +7,27 @@
 		</field>
 		<field>
 			<type>java.lang.Integer</type>
-			<name>类型id</name>
+			<name>标题id</name>
 		</field>
 		<field>
 			<type>java.lang.String</type>
-			<name>阅读原文</name>
+			<name>问题</name>
 		</field>
 		<field>
 			<type>java.lang.String</type>
-			<name>中文翻译</name>
+			<name>答案</name>
 		</field>
 		<field>
 			<type>java.lang.String</type>
-			<name>文章地址</name>
+			<name>解析</name>
 		</field>
 		<field>
 			<type>java.lang.String</type>
-			<name>TPO编号</name>
+			<name>内容</name>
 		</field>
 		<field>
 			<type>java.lang.String</type>
-			<name>中文题目</name>
-		</field>
-		<field>
-			<type>java.lang.String</type>
-			<name>英文题目</name>
+			<name>标题</name>
 		</field>
 	</fields>
 </root>

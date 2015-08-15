@@ -7,8 +7,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.bingo.annotation.ExcelColumn;
+import com.bingo.annotation.ExcelEntity;
+import com.bingo.annotation.ExcelId;
 import com.bingo.annotation.ExcelJoinColumn;
 import com.bingo.annotation.ExcelOneToMany;
+import com.bingo.annotation.ExcelOneToOne;
+import com.bingo.annotation.ExcelSheet;
+import com.bingo.annotation.ExcelTransient;
 
 import us.codecraft.webmagic.Page;
 import us.codecraft.webmagic.Site;
@@ -22,21 +27,34 @@ import cn.xdf.learn.util.StreamTool;
 /**
  * @author sunxingyang<br>
  */
+@ExcelEntity
+@ExcelSheet(name = "标题表", model = "/cn/xdf/learn/read/tpo/fentixing/fensecondPageProcessor.xml")
 public class FenSecondPageProcessor implements PageProcessor {
+	@ExcelId(auto = true)
+	private Integer id;
 	@ExcelColumn(name="标题")
 	private String title;
-	@ExcelColumn(name="内容")
-	private String neiRong;		//内容
 	@ExcelOneToMany
-	@ExcelJoinColumn(name = "文章id")
-	List<FenThirdPageProcessor> ftppList = new ArrayList<FenThirdPageProcessor>();
-	
-	public String getNeiRong() {
-		return neiRong;
+	@ExcelJoinColumn(name = "标题id")
+	List<FenFourthPageProcessor> ffpList= new ArrayList<FenFourthPageProcessor>(); 
+
+
+
+	public Integer getId() {
+		return id;
 	}
 
-	public void setNeiRong(String neiRong) {
-		this.neiRong = neiRong;
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
+
+	public List<FenFourthPageProcessor> getFfpList() {
+		return ffpList;
+	}
+
+	public void setFfpList(List<FenFourthPageProcessor> ffpList) {
+		this.ffpList = ffpList;
 	}
 
 	public String getTitle() {
@@ -46,16 +64,9 @@ public class FenSecondPageProcessor implements PageProcessor {
 	public void setTitle(String title) {
 		this.title = title;
 	}
-	
-	
 
-	public List<FenThirdPageProcessor> getFtppList() {
-		return ftppList;
-	}
 
-	public void setFtppList(List<FenThirdPageProcessor> ftppList) {
-		this.ftppList = ftppList;
-	}
+
 
 
 
@@ -64,12 +75,11 @@ public class FenSecondPageProcessor implements PageProcessor {
 
 	public void process(Page page) {
 		FenThirdPageProcessor ftp = new FenThirdPageProcessor();
-		this.setNeiRong(HtmlUtil.getContent(page.getHtml().$("div.view-text-r").toString()));
 		String form = page.getHtml().$("form#practiseForm").toString();
 		String action = page.getHtml().$("form", "action").toString();
 		try {
 			Spider.create(ftp).addUrl(getAll(action, form)).run();
-			ftppList.add(ftp);
+			this.setFfpList(ftp.getFfpList());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

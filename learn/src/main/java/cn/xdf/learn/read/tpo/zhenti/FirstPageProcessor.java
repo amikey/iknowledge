@@ -10,6 +10,7 @@ import us.codecraft.webmagic.Page;
 import us.codecraft.webmagic.Site;
 import us.codecraft.webmagic.Spider;
 import us.codecraft.webmagic.processor.PageProcessor;
+import cn.xdf.learn.util.HtmlUtil;
 
 import com.bingo.annotation.ExcelColumn;
 import com.bingo.annotation.ExcelEntity;
@@ -17,6 +18,7 @@ import com.bingo.annotation.ExcelId;
 import com.bingo.annotation.ExcelJoinColumn;
 import com.bingo.annotation.ExcelOneToMany;
 import com.bingo.annotation.ExcelSheet;
+import com.bingo.annotation.ExcelTransient;
 import com.bingo.io.DefaultExcelEntityWriter;
 import com.bingo.io.EntityWriter;
 import com.bingo.model.Excel;
@@ -59,8 +61,10 @@ public class FirstPageProcessor implements PageProcessor,Serializable {
 	public void setCategory(String category) {
 		this.category = category;
 	}
+	@ExcelTransient
 	private Site site = Site.me().setSleepTime(500).setRetryTimes(100)
 			.setTimeOut(15000);
+	@ExcelTransient
 	static int index = 1;
 
 	public void process(Page page) {
@@ -69,12 +73,17 @@ public class FirstPageProcessor implements PageProcessor,Serializable {
 		// 类别 例子：地理/环境/能源 (21)
 		this.setCategory(page.getHtml().xpath(maincol+ "/div[@class='wrap-left-top new-list-left g-mod-shadow']/div[2]/ul[1]/li["
 				+ index + "]/a[1]/text()").toString().trim());
+		List<String> qn = page.getHtml().$("div.ltems-boxs").all();
 		// 每种类型的数量
-		int qNum = Integer.parseInt(category.substring(
-				category.indexOf("(") + 1, category.indexOf(")")));
+		/*int qNum = Integer.parseInt(category.substring(
+				category.indexOf("(") + 1, category.indexOf(")")));*/
+		int qNum = qn.size();
 		// 阅读试题链接
-		StringBuffer readLinks = new StringBuffer();
+//		StringBuffer readLinks = new StringBuffer();
+		List<ImgInfo> iiList = new ArrayList<FirstPageProcessor.ImgInfo>(); 
 		for (int i = 1; i <= qNum; i++) {
+			ImgInfo imf = new ImgInfo();
+			StringBuffer readLinks = new StringBuffer();
 			readLinks
 					.append(page
 							.getHtml()
@@ -85,13 +94,36 @@ public class FirstPageProcessor implements PageProcessor,Serializable {
 									+ "]\n"
 									+ "/div[@class='boxs-scroll']/p[1]/a[1]/@href")
 							.toString());
-			readLinks.append(",");
+//			readLinks.append(",");
+			String tpoNumT = page
+					.getHtml()
+					.xpath(maincol
+							+ "/div[@class='wrap-content-list']/div[@class='box-wrap-content']\n"
+							+ "/div[@class='box-items clearfix']/div[@class='contents-box clearfix']/div["
+							+ i
+							+ "]\n"
+							+ "/div[@class='boxs-scroll']/div[@class='top-imgs']/div[1]/dl[1]/dt[1]")
+					.toString();
+			String tpoNum = HtmlUtil.getContent(tpoNumT).trim();
+			String temp = maincol
+					+ "/div[@class='wrap-content-list']/div[@class='box-wrap-content']\n"
+					+ "/div[@class='box-items clearfix']/div[@class='contents-box clearfix']/div["
+					+ i
+					+ "]\n"
+					+ "/div[@class='boxs-scroll']/div[@class='down-main']";
+			imf.setCnName(HtmlUtil.getContent(page.getHtml().xpath(temp+"/h3[1]").toString()));
+			imf.setEnName(HtmlUtil.getContent(page.getHtml().xpath(temp+"/h3[2]").toString()));
+			imf.setReadLinks(readLinks.toString());
+			imf.setTpoNum(tpoNum);
+			iiList.add(imf);
 		}
-		String[] ss = readLinks.toString().split(",");
-		for (String string : ss) {
+		for (ImgInfo imgInfo : iiList) {
 			SecondPageProcessor spp = new SecondPageProcessor();
-			Spider.create(spp).addUrl(string).run();
-			spp.setUrl(string);
+			Spider.create(spp).addUrl(imgInfo.getReadLinks()).run();
+			spp.setTpoNum(imgInfo.getTpoNum());
+			spp.setUrl(imgInfo.getReadLinks());
+			spp.setCnName(imgInfo.getCnName());
+			spp.setEnName(imgInfo.getEnName());
 			sppList.add(spp);
 		}
 		this.setSppList(sppList);
@@ -126,30 +158,36 @@ public class FirstPageProcessor implements PageProcessor,Serializable {
 		
 	}
 	
-	public static void readExcle(){
-		Excel ex = FileUtil.readObject("E:/test/TPO真题2.object", Excel.class);
-		List<com.bingo.model.ExcelSheet> sheets = ex.getSheets();
-		
-		for (com.bingo.model.ExcelSheet excelSheet : sheets) {
-			List<List> xuanxiang = new ArrayList<List>();
-			if("选项表".equals(excelSheet.getName())){
-				xuanxiang = excelSheet.getContent();
-				
-			}
-			if("问题表".equals(excelSheet.getName())){
-				List<List> wenti = excelSheet.getContent();
-				for (List listw : wenti) {
-					if("strong-insert js-scrollto".equals(listw.get(5))){
-						for (List listx : xuanxiang) {
-							if(listw.get(0).equals(listx.get(1))){
-								System.out.println();
-							}
-						}
-					}
-					
-				}
-			}
+	class ImgInfo{
+		String tpoNum;
+		String readLinks;
+		String enName;
+		String cnName;
+		public String getTpoNum() {
+			return tpoNum;
 		}
+		public void setTpoNum(String tpoNum) {
+			this.tpoNum = tpoNum;
+		}
+		public String getReadLinks() {
+			return readLinks;
+		}
+		public void setReadLinks(String readLinks) {
+			this.readLinks = readLinks;
+		}
+		public String getEnName() {
+			return enName;
+		}
+		public void setEnName(String enName) {
+			this.enName = enName;
+		}
+		public String getCnName() {
+			return cnName;
+		}
+		public void setCnName(String cnName) {
+			this.cnName = cnName;
+		}
+		
 	}
 	
 }
